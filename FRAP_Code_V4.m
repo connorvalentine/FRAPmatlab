@@ -7,7 +7,6 @@
 % - Ri should be the same more or less for every one- flag for this error
 % - line profiles as output to check.
 
-% - consider moving z_plots to output folder
 % - have a more rigorous way of choosing a smaller radius for pixel analysis
 % - remove speckles?
 % - uniformity metrics for the bleached spot and the reference region
