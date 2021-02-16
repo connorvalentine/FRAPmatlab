@@ -1,23 +1,23 @@
 % FRAP analysis V1 
 % Connor Valentine
 %% to do list
+%%%%%%%%%%% urgent
+% - add gui to flag circles that are not right
+% - recomment/clean code
+%%%%%%%%%%% primary
 % - multiple reference regions to help ignore irregularities
 % - why are Ifit values so low?
 % - error analysis of r_i vs tau
 % - Ri should be the same more or less for every one- flag for this error
-% - line profiles as output to check.
-
-% - have a more rigorous way of choosing a smaller radius for pixel analysis
-    % - really we need to be able to choose pixels in a given radius not
-    % just the idx from obj finder
+% - error propagation of std_dev of radius?
+    
+%%%%%%%%%%% thoughts
 % - uniformity metrics for the bleached spot and the reference region
-% - save plots into a results folder with names
-% - De-blur image?
 % - data cleaning of outliers 
 % - reference sample in each array? HDFL gel?
 % - recomment/clean code
 
-%%%%%%%%%%% fitting %%%%%%%%%%%%%%%%%%%%%5
+%%%%%%%%%%% Diffusivity fitting %%%%%%%%%%%%%%%%%%%%%5
 % - make fitting go faster
 % - other models for FRAP and normalization?
 % - confirm that the diffusivity is calculated correctly
@@ -54,18 +54,19 @@
 % frap folder must be named 'frap'
 
 % choose the folders
+global folder1 folder2
     folder1 = 'F127_BSA_25C';
-    folder2 = 'trial_3';
+    folder2 = 'trial_2';
 
 % save images? 
     save_im = 'n'; 
     % save_im = 'y';
 % parameters that may change from experiment to experiment during troubleshooting    
-    dThresh = 0.9; %0.7 didnt work
     dy = 350;   
-    dx = 350;    
+    dx = 350;   
+    lim1 = 50; % minimum pixel radius to look for
 % troubleshooting? 
-    trouble = 'y'; % does not fit the data 
+    trouble = 'n'; % does not fit the data 
     % trouble = 'n'; % working as normal
 % frame to analyze as first bleached frame (frame 1)
     t1 = 2;
@@ -107,15 +108,10 @@ for field = fieldnames(id)'
      % Analyze first bleached frame
     f1 = fullfile(data(t1).folder,data(t1).name);
     im = imread(f1);
-    x = [0 size(im,2)];
-    y = [size(im,1)/2 size(im,1)/2];
-    c = improfile(im,x,y);
-    
+
     % now smooth image
     imsmooth = imgaussfilt(im,8);
-    c1 = improfile(imsmooth,x,y);
-
-
+    
     % for plotting images
     imlb = min(im(:));
     imub = mean2(im);
@@ -133,19 +129,44 @@ for field = fieldnames(id)'
     % These objects are now analyzed by regionprops(). 
     % The output is a table, called stats, that has the information for each object
     stats = regionprops('table', L, 'Centroid', 'EquivDiameter','Circularity','Solidity','Area','PixelList'); 
-    main_idx = find(stats.Solidity == max(stats.Solidity));
-
-    circularity = stats.Circularity(main_idx);
-    idx = stats.PixelList(main_idx);
-    idx = cell2mat(idx);
-    idx_bleach = sub2ind(size(im),idx(:,2),idx(:,1));
-    center = stats.Centroid(main_idx,:); 
-    radius = (stats.EquivDiameter(main_idx)/2);
-
-    % reference region dx and dy defined above, convert to pixel # list instead of coords
-    idx_ref = sub2ind(size(im),idx(:,2)+dy,idx(:,1)+dx);  
+    
+    if height(stats) == 0 % if no objects meet our criteria
+        disp(['no good droplet found at ', position]) 
+        % remove field name from id list
+        id = rmfield(id,position);
+        center = size(image)/2; % center is the middle of the image
+        radius = 10; % radius set to 10 pixels (too small to be a real object)
         
-       
+    else % if the drop_info table is not empty
+        % This is the center and radii of every "good" object found. The
+        % code works even if multiple "good" drops are found. 
+        main_idx = find(stats.Solidity == max(stats.Solidity));
+    end
+    
+    % other errors
+    if stats.EquivDiameter(main_idx)/2 < lim1
+        disp(['no good droplet found at ', position]) 
+        id = rmfield(id,position);
+        center = size(image)/2; % center is the middle of the image
+        radius = 10; % radius set to 10 pixels (too small to be a real object)
+    else
+        circularity = stats.Circularity(main_idx);
+        idx = stats.PixelList(main_idx);
+        idx = cell2mat(idx);
+        idx_bleach = sub2ind(size(im),idx(:,2),idx(:,1));
+        center = stats.Centroid(main_idx,:); 
+        radius = (stats.EquivDiameter(main_idx)/2);
+        idx_ref = sub2ind(size(im),idx(:,2)+dy,idx(:,1)+dx);  % reference region dx and dy defined above, convert to pixel # list instead of coords
+        
+        % save the circle and reference regions into fits 
+        fits.(position).('radius') = radius;
+        fits.(position).('center') = center;
+        fits.(position).('idx_ref') = idx_ref;
+        fits.(position).('idx_bleach') = idx_bleach;
+        fits.(position).('imbds') = [imlb,imub]; 
+        fits.(position).('images') = images;
+    end
+           
         fig = figure('name',position,'visible','on');
         set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
         
@@ -154,10 +175,6 @@ for field = fieldnames(id)'
             hold on 
             imshow(im,[imlb,imub],'Border','tight','InitialMagnification', 'fit');
             viscircles(center,radius,'linewidth',0.2,'color','g');
-            plot(x,y,'m')
-            % Increase the size and position of the image 
-%             pos1 = get(gca,'Position'); pos1(1) = 0; pos1(2) = 0.2; pos1(3) = 0.5; 
-%             set(gca,'Position',pos1); 
             hold off 
         subplot(2,2,2)
         %show the laser region and reference region as black circles
@@ -168,41 +185,38 @@ for field = fieldnames(id)'
             % first plot the black and white image
             imshow(bw4,'Border','tight','InitialMagnification', 'fit')
             h= viscircles(center,radius,'linewidth',0.2,'color','g');
-            % Increase the size and position of the image 
-%             pos2 = get(gca,'Position'); pos2(1)= 0.5; pos2(2) = 0.2; pos2(3) = 0.5;
-%             set(gca,'Position',pos2);
             hold off 
         subplot(2,2,3)
         % line profile across the radius
+            x = [0 size(im,2)];
+            y = [center(2) center(2)];
+            c = improfile(im,x,y); % line profiles 
+            c1 = improfile(imsmooth,x,y); % line profiles 
             hold on 
             plot(c(:,1,1),'r')
             plot(c1(:,1,1),'b')
             plot([0,2024],[imub,imub]) 
-            plot([0,2024],[imlb,imlb])
             % add radius and center
-            plot([center(1)-radius,center(1)+radius],[(imub+imlb)*0.5,(imub+imlb)*0.5])
-
-        % saving the figure as a high quality png 
-        if save_im == 'n'
-            fig.PaperUnits = 'inches';
-            fig.PaperPosition = [0 0 8 6];             % define location to save the images 
-            a = fieldnames(id);
-            pp = a{1};
-            struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
-            plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_frames'];
-            plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-            print(fig,plot_path, '-painters', '-dpng', '-r600')
-        else
-        end
-        % save the circle and reference regions into fits 
-        fits.(position).('radius') = radius;
-        fits.(position).('center') = center;
-        fits.(position).('idx_ref') = idx_ref;
-        fits.(position).('idx_bleach') = idx_bleach;
-        fits.(position).('imbds') = [imlb,imub]; 
-        fits.(position).('images') = images;
+            plot([center(1)-radius,center(1)+radius],[1.2*mean([imub,imlb]),1.2*mean([imub,imlb])])
+            axis([0 2024 imlb 1.2*imub])
 end  
 disp("bleached circles found in " + string(round(toc)) +" s");
+
+%% save images if selected above
+if save_im == 'y'
+    for field = fieldnames(id)'
+        position = field{1};
+        fig.PaperUnits = 'inches';
+        fig.PaperPosition = [0 0 8 6];             % define location to save the images 
+        a = fieldnames(id);
+        pp = a{1};
+        struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
+        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_frames'];
+        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png 
+    end    
+else    
+end
 
 %% Readin the pre-bleach images next
 for field = fieldnames(id)'
@@ -402,7 +416,6 @@ save(fits_name,'fits');
 save(id_name,'id');
 cd(mainfolder);
 %% plotting the analyzed data 
-close all
 C = jet;
 for field = fieldnames(alldata)'
     position = field{1}; % use{} bcuz field is a cell array
@@ -421,12 +434,10 @@ for field = fieldnames(alldata)'
     ref_ratio = [alldata.(position).ref_ratio]';
     ref_ratio = ref_ratio(t1:end);
 
-    
     % plotting the data
     hold on
     plot(t,IN,'x','color',C(40,:))
-    plot(t,I,'.','color',C(20,:))
-    % plot(t,ref_ratio,'s','color','k')
+
     % if not troubleshooting, plot the fits as well
     if trouble == 'n'
     t_fit = [fits.(position).t_fit]';
@@ -442,30 +453,43 @@ for field = fieldnames(alldata)'
     xlabel('Time [s]');
     ylabel('Normalized Intensity');
 end
-    
+
 %% diffusivity data vs conc
 if trouble == 'n'
 fig = figure('name','All','visible','on');
 set(fig, 'WindowStyle', 'Docked'); 
 
 % need for loop to unpack
-hold on
 i = 0;
 for field = fieldnames(alldata)'
     position = field{1};
     i = i+1;
     D = fits.(position).D/55.1;
     c = id.(position).plwt;
+    pxl = fits.(position).pixel_size;
+    r = fits.(position).radius*pxl;
+    rall(i) =r;
     conc(i) = c;
     Dall(i) = D; % from cheng to normalize by free soln BSA D
     Dneg = fits.(position).errD(1)/55.1;
     Dpos = fits.(position).errD(2)/55.1;
-    plot(c,D,'db')
-    errorbar(c,D,Dneg,Dpos,'ob')
+    Dnegall(i) = Dneg;
+    Dposall(i) = Dpos;
 end
-    axis([0.9*min(conc) 1.1*max(conc) 0.8*min(Dall) 1.2*max(Dall)])
+
+subplot(1,2,1)
+    hold on 
+    errorbar(conc,Dall,Dnegall,Dposall,'db')
+    axis([0.9*min(conc) 1.1*max(conc) 0.7*min(Dall) 2*max(Dall)])
     set(gca,'YScale','log');
     xlabel([id.(position).plur,' wt%'])
     ylabel('D/D_0 [\mum^2s^{-1}]')
+
+subplot(1,2,2)
+    hold on
+    plot(conc,rall,'or')
+    axis([0.9*min(conc) 1.1*max(conc) 0.8*min(rall) 1.2*max(rall)])
+    xlabel([id.(position).plur,' wt%'])
+    ylabel('laser radius [um]')
 else
 end

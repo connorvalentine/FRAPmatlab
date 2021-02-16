@@ -4,17 +4,14 @@
 %%%%%%%%%%% urgent
 % - add gui to flag circles that are not right
 % - recomment/clean code
+% - save thge D and c vectors for plotting into a new structure to export
 %%%%%%%%%%% primary
 % - multiple reference regions to help ignore irregularities
 % - why are Ifit values so low?
 % - error analysis of r_i vs tau
 % - Ri should be the same more or less for every one- flag for this error
-
-
-% - have a more rigorous way of choosing a smaller radius for pixel analysis
-    % - really we need to be able to choose pixels in a given radius not
-    % just the idx from obj finder
-    
+% - error propagation of std_dev of radius?
+% - why is ifit taking so long
 %%%%%%%%%%% thoughts
 % - uniformity metrics for the bleached spot and the reference region
 % - data cleaning of outliers 
@@ -58,18 +55,19 @@
 % frap folder must be named 'frap'
 
 % choose the folders
-    folder1 = 'F127_BSA_25C';
-    folder2 = 'trial_3';
+global folder1 folder2
+    folder1 = 'P123_BSA_25C';
+    folder2 = 'trial_1';
 
 % save images? 
-    save_im = 'n'; 
+    save_im = 'y'; 
     % save_im = 'y';
 % parameters that may change from experiment to experiment during troubleshooting    
-    dThresh = 0.9; %0.7 didnt work
     dy = 350;   
-    dx = 350;    
+    dx = 350;   
+    lim1 = 50; % minimum pixel radius to look for
 % troubleshooting? 
-    trouble = 'y'; % does not fit the data 
+    trouble = 'n'; % does not fit the data 
     % trouble = 'n'; % working as normal
 % frame to analyze as first bleached frame (frame 1)
     t1 = 2;
@@ -132,25 +130,44 @@ for field = fieldnames(id)'
     % These objects are now analyzed by regionprops(). 
     % The output is a table, called stats, that has the information for each object
     stats = regionprops('table', L, 'Centroid', 'EquivDiameter','Circularity','Solidity','Area','PixelList'); 
-    main_idx = find(stats.Solidity == max(stats.Solidity));
-
-    circularity = stats.Circularity(main_idx);
-    idx = stats.PixelList(main_idx);
-    idx = cell2mat(idx);
-    idx_bleach = sub2ind(size(im),idx(:,2),idx(:,1));
-    center = stats.Centroid(main_idx,:); 
-    radius = (stats.EquivDiameter(main_idx)/2);
     
-    % line profiles 
-    x = [0 size(im,2)];
-    y = [center(2) center(2)];
-    c = improfile(im,x,y);
-    c1 = improfile(imsmooth,x,y);
-    
-    % reference region dx and dy defined above, convert to pixel # list instead of coords
-    idx_ref = sub2ind(size(im),idx(:,2)+dy,idx(:,1)+dx);  
+    if height(stats) == 0 % if no objects meet our criteria
+        disp(['no good droplet found at ', position]) 
+        % remove field name from id list
+        id = rmfield(id,position);
+        center = size(image)/2; % center is the middle of the image
+        radius = 10; % radius set to 10 pixels (too small to be a real object)
         
-       
+    else % if the drop_info table is not empty
+        % This is the center and radii of every "good" object found. The
+        % code works even if multiple "good" drops are found. 
+        main_idx = find(stats.Solidity == max(stats.Solidity));
+    end
+    
+    % other errors
+    if stats.EquivDiameter(main_idx)/2 < lim1
+        disp(['no good droplet found at ', position]) 
+        id = rmfield(id,position);
+        center = size(image)/2; % center is the middle of the image
+        radius = 10; % radius set to 10 pixels (too small to be a real object)
+    else
+        circularity = stats.Circularity(main_idx);
+        idx = stats.PixelList(main_idx);
+        idx = cell2mat(idx);
+        idx_bleach = sub2ind(size(im),idx(:,2),idx(:,1));
+        center = stats.Centroid(main_idx,:); 
+        radius = (stats.EquivDiameter(main_idx)/2);
+        idx_ref = sub2ind(size(im),idx(:,2)+dy,idx(:,1)+dx);  % reference region dx and dy defined above, convert to pixel # list instead of coords
+        
+        % save the circle and reference regions into fits 
+        fits.(position).('radius') = radius;
+        fits.(position).('center') = center;
+        fits.(position).('idx_ref') = idx_ref;
+        fits.(position).('idx_bleach') = idx_bleach;
+        fits.(position).('imbds') = [imlb,imub]; 
+        fits.(position).('images') = images;
+    end
+           
         fig = figure('name',position,'visible','on');
         set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
         
@@ -159,10 +176,6 @@ for field = fieldnames(id)'
             hold on 
             imshow(im,[imlb,imub],'Border','tight','InitialMagnification', 'fit');
             viscircles(center,radius,'linewidth',0.2,'color','g');
-            plot(x,y,'m')
-            % Increase the size and position of the image 
-%             pos1 = get(gca,'Position'); pos1(1) = 0; pos1(2) = 0.2; pos1(3) = 0.5; 
-%             set(gca,'Position',pos1); 
             hold off 
         subplot(2,2,2)
         %show the laser region and reference region as black circles
@@ -173,12 +186,13 @@ for field = fieldnames(id)'
             % first plot the black and white image
             imshow(bw4,'Border','tight','InitialMagnification', 'fit')
             h= viscircles(center,radius,'linewidth',0.2,'color','g');
-            % Increase the size and position of the image 
-%             pos2 = get(gca,'Position'); pos2(1)= 0.5; pos2(2) = 0.2; pos2(3) = 0.5;
-%             set(gca,'Position',pos2);
             hold off 
         subplot(2,2,3)
         % line profile across the radius
+            x = [0 size(im,2)];
+            y = [center(2) center(2)];
+            c = improfile(im,x,y); % line profiles 
+            c1 = improfile(imsmooth,x,y); % line profiles 
             hold on 
             plot(c(:,1,1),'r')
             plot(c1(:,1,1),'b')
@@ -186,28 +200,24 @@ for field = fieldnames(id)'
             % add radius and center
             plot([center(1)-radius,center(1)+radius],[1.2*mean([imub,imlb]),1.2*mean([imub,imlb])])
             axis([0 2024 imlb 1.2*imub])
-
-        % saving the figure as a high quality png 
-        if save_im == 'n'
-            fig.PaperUnits = 'inches';
-            fig.PaperPosition = [0 0 8 6];             % define location to save the images 
-            a = fieldnames(id);
-            pp = a{1};
-            struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
-            plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_frames'];
-            plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-            print(fig,plot_path, '-painters', '-dpng', '-r600')
-        else
-        end
-        % save the circle and reference regions into fits 
-        fits.(position).('radius') = radius;
-        fits.(position).('center') = center;
-        fits.(position).('idx_ref') = idx_ref;
-        fits.(position).('idx_bleach') = idx_bleach;
-        fits.(position).('imbds') = [imlb,imub]; 
-        fits.(position).('images') = images;
 end  
 disp("bleached circles found in " + string(round(toc)) +" s");
+
+%% save images if selected above
+if save_im == 'y'
+    for field = fieldnames(id)'
+        position = field{1};
+        fig.PaperUnits = 'inches';
+        fig.PaperPosition = [0 0 8 6];             % define location to save the images 
+        a = fieldnames(id);
+        pp = a{1};
+        struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
+        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_frames'];
+        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png 
+    end    
+else    
+end
 
 %% Readin the pre-bleach images next
 for field = fieldnames(id)'
@@ -407,7 +417,6 @@ save(fits_name,'fits');
 save(id_name,'id');
 cd(mainfolder);
 %% plotting the analyzed data 
-close all
 C = jet;
 for field = fieldnames(alldata)'
     position = field{1}; % use{} bcuz field is a cell array
@@ -426,12 +435,10 @@ for field = fieldnames(alldata)'
     ref_ratio = [alldata.(position).ref_ratio]';
     ref_ratio = ref_ratio(t1:end);
 
-    
     % plotting the data
     hold on
     plot(t,IN,'x','color',C(40,:))
-    plot(t,I,'.','color',C(20,:))
-    % plot(t,ref_ratio,'s','color','k')
+
     % if not troubleshooting, plot the fits as well
     if trouble == 'n'
     t_fit = [fits.(position).t_fit]';
@@ -447,30 +454,72 @@ for field = fieldnames(alldata)'
     xlabel('Time [s]');
     ylabel('Normalized Intensity');
 end
-    
+
+% save images if selected above
+if save_im == 'y'
+    for field = fieldnames(id)'
+        position = field{1};
+        fig.PaperUnits = 'inches';
+        fig.PaperPosition = [0 0 8 6];             % define location to save the images 
+        a = fieldnames(id);
+        pp = a{1};
+        struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
+        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_intensity_fit'];
+        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png 
+    end    
+else    
+end
+
 %% diffusivity data vs conc
 if trouble == 'n'
 fig = figure('name','All','visible','on');
 set(fig, 'WindowStyle', 'Docked'); 
 
 % need for loop to unpack
-hold on
 i = 0;
 for field = fieldnames(alldata)'
     position = field{1};
     i = i+1;
     D = fits.(position).D/55.1;
     c = id.(position).plwt;
+    pxl = fits.(position).pixel_size;
+    r = fits.(position).radius*pxl;
+    rall(i) =r;
     conc(i) = c;
     Dall(i) = D; % from cheng to normalize by free soln BSA D
     Dneg = fits.(position).errD(1)/55.1;
     Dpos = fits.(position).errD(2)/55.1;
-    plot(c,D,'db')
-    errorbar(c,D,Dneg,Dpos,'ob')
+    Dnegall(i) = Dneg;
+    Dposall(i) = Dpos;
 end
-    axis([0.9*min(conc) 1.1*max(conc) 0.8*min(Dall) 1.2*max(Dall)])
+
+subplot(1,2,1)
+    hold on 
+    errorbar(conc,Dall,Dnegall,Dposall,'db')
+    axis([0.9*min(conc) 1.1*max(conc) 0.7*min(Dall) 2*max(Dall)])
     set(gca,'YScale','log');
     xlabel([id.(position).plur,' wt%'])
     ylabel('D/D_0 [\mum^2s^{-1}]')
+
+subplot(1,2,2)
+    hold on
+    plot(conc,rall,'or')
+    axis([0.9*min(conc) 1.1*max(conc) 0.8*min(rall) 1.2*max(rall)])
+    xlabel([id.(position).plur,' wt%'])
+    ylabel('laser radius [um]')
 else
+end
+
+% save images if selected above
+if save_im == 'y'
+        a = fieldnames(id);
+        posn = a{1};
+        fig.PaperUnits = 'inches';
+        fig.PaperPosition = [0 0 10 4];             % define location to save the images 
+        struct_name = [id.(posn).plur,'_',id.(posn).prot,'_',id.(posn).temp,'_',folder2];
+        plot_name = [struct_name,'_DvC'];
+        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+else    
 end
