@@ -1,27 +1,23 @@
 % FRAP analysis V1 
 % Connor Valentine
 %% to do list
-%%%%%%%%%%% urgent
-% - add gui to flag circles that are not right
-% - recomment/clean code
-%%%%%%%%%%% primary
 % - multiple reference regions to help ignore irregularities
 % - why are Ifit values so low?
 % - error analysis of r_i vs tau
 % - Ri should be the same more or less for every one- flag for this error
-
+% - line profiles as output to check.
 
 % - have a more rigorous way of choosing a smaller radius for pixel analysis
     % - really we need to be able to choose pixels in a given radius not
     % just the idx from obj finder
-    
-%%%%%%%%%%% thoughts
 % - uniformity metrics for the bleached spot and the reference region
+% - save plots into a results folder with names
+% - De-blur image?
 % - data cleaning of outliers 
 % - reference sample in each array? HDFL gel?
 % - recomment/clean code
 
-%%%%%%%%%%% Diffusivity fitting %%%%%%%%%%%%%%%%%%%%%5
+%%%%%%%%%%% fitting %%%%%%%%%%%%%%%%%%%%%5
 % - make fitting go faster
 % - other models for FRAP and normalization?
 % - confirm that the diffusivity is calculated correctly
@@ -111,10 +107,15 @@ for field = fieldnames(id)'
      % Analyze first bleached frame
     f1 = fullfile(data(t1).folder,data(t1).name);
     im = imread(f1);
-
+    x = [0 size(im,2)];
+    y = [size(im,1)/2 size(im,1)/2];
+    c = improfile(im,x,y);
+    
     % now smooth image
     imsmooth = imgaussfilt(im,8);
-    
+    c1 = improfile(imsmooth,x,y);
+
+
     % for plotting images
     imlb = min(im(:));
     imub = mean2(im);
@@ -140,13 +141,7 @@ for field = fieldnames(id)'
     idx_bleach = sub2ind(size(im),idx(:,2),idx(:,1));
     center = stats.Centroid(main_idx,:); 
     radius = (stats.EquivDiameter(main_idx)/2);
-    
-    % line profiles 
-    x = [0 size(im,2)];
-    y = [center(2) center(2)];
-    c = improfile(im,x,y);
-    c1 = improfile(imsmooth,x,y);
-    
+
     % reference region dx and dy defined above, convert to pixel # list instead of coords
     idx_ref = sub2ind(size(im),idx(:,2)+dy,idx(:,1)+dx);  
         
@@ -183,9 +178,9 @@ for field = fieldnames(id)'
             plot(c(:,1,1),'r')
             plot(c1(:,1,1),'b')
             plot([0,2024],[imub,imub]) 
+            plot([0,2024],[imlb,imlb])
             % add radius and center
-            plot([center(1)-radius,center(1)+radius],[1.2*mean([imub,imlb]),1.2*mean([imub,imlb])])
-            axis([0 2024 imlb 1.2*imub])
+            plot([center(1)-radius,center(1)+radius],[(imub+imlb)*0.5,(imub+imlb)*0.5])
 
         % saving the figure as a high quality png 
         if save_im == 'n'
