@@ -35,6 +35,8 @@
     global boxfolder outputfolder 
     boxfolder = 'C:\Users\user\Box\Sorted Data FRAP\Sorted Data';
     outputfolder = fullfile(boxfolder,'z_outputs');
+    plotfolder = fullfile(boxfolder,'z_outputs','main_analysis');
+    
     id = struct();
     fits = struct();
 % load in the info structure.
@@ -49,8 +51,13 @@
     cd(mainfolder)
 %% cheng comparison data
 F127c = [7;10;12;15;17.5;20;23;25;27];
-% F127d = [0.2;
-    
+F127d = [0.2;0.1;0.08;0.04;0.025;0.012;0.009;0.006;0.003];
+
+F87c = [15;20;25;30;37;40;43];
+F87d = [0.06;0.035;0.017;0.005;0.0017;0.001;0.0004];
+
+P123c = [10;15;20;30;33;35];
+P123d = [0.18;0.12;0.07;0.004;0.0004;0.00025];
 
 %% plotting    
 close all
@@ -61,14 +68,14 @@ set(fig, 'WindowStyle', 'Docked');
 % need for loop to unpack
 k = 0;
 lgd = [];
-
+syms = ['d','s','o'];
 for topfield = fieldnames(id)'
     pluronic = topfield{1};
     C = parula(3*length(fieldnames(id)));
     i = 0;
     k = k+1;
     conc = [];
-    C1 = C(2+2*k,:);
+    C1(:,k) = C(2+2*k,:);
     for field = fieldnames(id.(pluronic))'
         position = field{1};
         fits2 = fits.(pluronic);
@@ -88,12 +95,25 @@ for topfield = fieldnames(id)'
     end
     lgd{k} = pluronic;
     hold on 
-    errorbar(conc,Dall,Dnegall,Dposall,'linestyle','none','Color',C1,'MarkerFaceColor',C1,'Marker','d')
+    errorbar(conc,Dall,Dnegall,Dposall,'linestyle','none','Color',C1(:,k),'MarkerFaceColor',C1(:,k),'Marker',syms(k),'MarkerSize',10)
 end
-axis([15 45 1e-3 1e2])
+lgd{4} = 'F87 Cheng';
+lgd{5} = 'F127 Cheng';
+lgd{6} = 'P123 Cheng';
+
+plot(F87c,F87d,'linestyle','none','Color',C1(:,1),'Marker',syms(1),'MarkerSize',10,'linewidth',2)
+plot(F127c,F127d,'linestyle','none','Color',C1(:,2),'Marker',syms(2),'MarkerSize',10,'linewidth',2)
+plot(P123c,P123d,'linestyle','none','Color',C1(:,3),'Marker',syms(3),'MarkerSize',10,'linewidth',2)
+
+axis([5 45 1e-4 1e2])
 set(gca,'YScale','log');
 xlabel(['wt%'])
 ylabel('D/D_0 [\mum^2s^{-1}]')
 title('Diffusivity of BSA in Pluronic at 25\circC')
 legend(lgd)
 
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 8 6];             % define location to save the images 
+plot_name = ['Cheng_vs_CSV_DvC_25C'];
+plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    

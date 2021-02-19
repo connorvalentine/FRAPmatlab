@@ -2,20 +2,25 @@
 % Connor Valentine
 %% to do list
 %%%%%%%%%%% urgent
-% - add gui to flag circles that are not right
 % - recomment/clean code
+% - save thge D and c vectors for plotting into a new structure to export
+% - why is radius so different than cheng??
+% - add mobile fraction vs C to output
+% - is photobleaching a permanent phenomena? irreversible?
+% - make a sheet showing which experiments are good/favorites
+
 %%%%%%%%%%% primary
 % - multiple reference regions to help ignore irregularities
 % - why are Ifit values so low?
 % - error analysis of r_i vs tau
 % - Ri should be the same more or less for every one- flag for this error
 % - error propagation of std_dev of radius?
-    
+% - why is ifit taking so long
 %%%%%%%%%%% thoughts
 % - uniformity metrics for the bleached spot and the reference region
-% - data cleaning of outliers 
 % - reference sample in each array? HDFL gel?
-% - recomment/clean code
+% - Qunatify I0 vs bleaching time 
+% - energy balance on laser to make sure it isnt heating up
 
 %%%%%%%%%%% Diffusivity fitting %%%%%%%%%%%%%%%%%%%%%5
 % - make fitting go faster
@@ -55,19 +60,19 @@
 
 % choose the folders
 global folder1 folder2
-    folder1 = 'F127_BSA_25C';
-    folder2 = 'trial_2';
+    folder1 = 'F127_BSA_45C';
+    folder2 = 'trial_1';
 
 % save images? 
-    save_im = 'n'; 
+    save_im = 'y'; 
     % save_im = 'y';
 % parameters that may change from experiment to experiment during troubleshooting    
     dy = 350;   
     dx = 350;   
     lim1 = 50; % minimum pixel radius to look for
 % troubleshooting? 
-    trouble = 'n'; % does not fit the data 
-    % trouble = 'n'; % working as normal
+%     trouble = 'y'; % does not fit the data 
+    trouble = 'n'; % working as normal
 % frame to analyze as first bleached frame (frame 1)
     t1 = 2;
     
@@ -436,8 +441,8 @@ for field = fieldnames(alldata)'
 
     % plotting the data
     hold on
-    plot(t,IN,'x','color',C(40,:))
-
+%     plot(t,I,'x','color',C(40,:))
+    plot(t,IN,'d','color',C(40,:),'markerfacecolor',C(40,:))
     % if not troubleshooting, plot the fits as well
     if trouble == 'n'
     t_fit = [fits.(position).t_fit]';
@@ -452,7 +457,23 @@ for field = fieldnames(alldata)'
     axis([0,max(t),0,1.2]);
     xlabel('Time [s]');
     ylabel('Normalized Intensity');
+
+% save images if selected above
+if save_im == 'y'
+        fig.PaperUnits = 'inches';
+        fig.PaperPosition = [0 0 8 6];             % define location to save the images 
+        a = fieldnames(id);
+        pp = a{1};
+        struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
+        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_intensity_fit'];
+        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png  
+else    
 end
+
+end
+
+
 
 %% diffusivity data vs conc
 if trouble == 'n'
@@ -492,4 +513,26 @@ subplot(1,2,2)
     xlabel([id.(position).plur,' wt%'])
     ylabel('laser radius [um]')
 else
+end
+
+% save images if selected above
+if save_im == 'y'
+        a = fieldnames(id);
+        posn = a{1};
+        fig.PaperUnits = 'inches';
+        fig.PaperPosition = [0 0 10 4];             % define location to save the images 
+        struct_name = [id.(posn).plur,'_',id.(posn).prot,'_',id.(posn).temp,'_',folder2];
+        plot_name = [struct_name,'_DvC'];
+        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+else    
+end
+
+%% complete
+disp('Analysis Complete')
+
+%% testing
+for field = fieldnames(alldata)'
+    a = field{1}
+    fits.(a).errD
 end

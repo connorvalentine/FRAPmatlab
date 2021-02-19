@@ -2,9 +2,13 @@
 % Connor Valentine
 %% to do list
 %%%%%%%%%%% urgent
-% - add gui to flag circles that are not right
 % - recomment/clean code
 % - save thge D and c vectors for plotting into a new structure to export
+% - why is radius so different than cheng??
+% - add mobile fraction vs C to output
+% - is photobleaching a permanent phenomena? irreversible?
+% - make a sheet showing which experiments are good/favorites
+
 %%%%%%%%%%% primary
 % - multiple reference regions to help ignore irregularities
 % - why are Ifit values so low?
@@ -14,9 +18,9 @@
 % - why is ifit taking so long
 %%%%%%%%%%% thoughts
 % - uniformity metrics for the bleached spot and the reference region
-% - data cleaning of outliers 
 % - reference sample in each array? HDFL gel?
-% - recomment/clean code
+% - Qunatify I0 vs bleaching time 
+% - energy balance on laser to make sure it isnt heating up
 
 %%%%%%%%%%% Diffusivity fitting %%%%%%%%%%%%%%%%%%%%%5
 % - make fitting go faster
@@ -56,8 +60,8 @@
 
 % choose the folders
 global folder1 folder2
-    folder1 = 'P123_BSA_25C';
-    folder2 = 'trial_1';
+    folder1 = 'F127_BSA_35C';
+    folder2 = 'trial_4';
 
 % save images? 
     save_im = 'y'; 
@@ -67,8 +71,8 @@ global folder1 folder2
     dx = 350;   
     lim1 = 50; % minimum pixel radius to look for
 % troubleshooting? 
-    trouble = 'n'; % does not fit the data 
-    % trouble = 'n'; % working as normal
+%     trouble = 'y'; % does not fit the data 
+    trouble = 'n'; % working as normal
 % frame to analyze as first bleached frame (frame 1)
     t1 = 2;
     
@@ -369,10 +373,10 @@ for field = fieldnames(alldata)'
     tau = f.tau;
     dtau = ci(:,3);
     D = (ri.^2)./(4*tau);
-    Dl = (ri.^2)./(4*tau + max(dtau));
-    Dr = (ri.^2)./(4*tau - min(dtau));
-    Dneg = D-Dl;
-    Dpos = Dr-D;
+    Dlow = ((0.9*ri).^2)./(4*max(dtau)); % adds 10% variation to ri
+    Dhigh = ((1.1*ri).^2)./(4*min(dtau)); % adds 10% variation to ri
+    Dneg = D-Dlow;
+    Dpos = Dhigh-D;
     errD = [Dneg Dpos];
     % creating new data structure for fit data
     fits.(position).('fit_info') = f;
@@ -437,8 +441,8 @@ for field = fieldnames(alldata)'
 
     % plotting the data
     hold on
-    plot(t,IN,'x','color',C(40,:))
-
+%     plot(t,I,'x','color',C(40,:))
+    plot(t,IN,'d','color',C(40,:),'markerfacecolor',C(40,:))
     % if not troubleshooting, plot the fits as well
     if trouble == 'n'
     t_fit = [fits.(position).t_fit]';
@@ -453,12 +457,9 @@ for field = fieldnames(alldata)'
     axis([0,max(t),0,1.2]);
     xlabel('Time [s]');
     ylabel('Normalized Intensity');
-end
 
 % save images if selected above
 if save_im == 'y'
-    for field = fieldnames(id)'
-        position = field{1};
         fig.PaperUnits = 'inches';
         fig.PaperPosition = [0 0 8 6];             % define location to save the images 
         a = fieldnames(id);
@@ -466,10 +467,13 @@ if save_im == 'y'
         struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
         plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_intensity_fit'];
         plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png 
-    end    
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png  
 else    
 end
+
+end
+
+
 
 %% diffusivity data vs conc
 if trouble == 'n'
@@ -495,10 +499,10 @@ for field = fieldnames(alldata)'
 end
 
 subplot(1,2,1)
-    hold on 
+    set(gca,'YScale','log');
+    hold all
     errorbar(conc,Dall,Dnegall,Dposall,'db')
     axis([0.9*min(conc) 1.1*max(conc) 0.7*min(Dall) 2*max(Dall)])
-    set(gca,'YScale','log');
     xlabel([id.(position).plur,' wt%'])
     ylabel('D/D_0 [\mum^2s^{-1}]')
 
@@ -522,4 +526,13 @@ if save_im == 'y'
         plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
         print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
 else    
+end
+
+%% complete
+disp('Analysis Complete')
+
+%% testing
+for field = fieldnames(alldata)'
+    a = field{1};
+    fits.(a).errD
 end
