@@ -2,7 +2,6 @@
 % Connor Valentine
 %% to do list
 %%%%%%%%%%% urgent
-
 % - recomment/clean code
 % - save thge D and c vectors for plotting into a new structure to export
 % - add mobile fraction vs C to output
@@ -61,199 +60,51 @@
     global mainfolder 
     mainfolder = cd; 
     
-%% choose the folders
-% prebleach folder must be named 'prebleach'
-% frap folder must be named 'frap'
+%% %%%%%%%%%%%%%%%% Inputs Section: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Everything that must be selected when code is running smoothly 
 
-% choose the folders
+% Part 1: choose the folders
+% NOTE:         prebleach folder must be named 'prebleach'
+%               frap folder must be named 'frap'
 global folder1 folder2
-    folder1 = 'F127_BSA_35C';
-    folder2 = 'trial_4';
+    folder1 = 'F87_BSA_35C';
+    folder2 = 'trial_1';
 
-% save images? 
-    save_im = 'y'; 
-    % save_im = 'y';
-% parameters that may change from experiment to experiment during troubleshooting    
-    dy = 350;   
-    dx = 350;   
-    lim1 = 50; % minimum pixel radius to look for
-% troubleshooting? 
-%     trouble = 'y'; % does not fit the data 
-    trouble = 'n'; % working as normal
-% frame to analyze as first bleached frame (frame 1)
-    t1 = 2;
-    
-%% Initialize Data Folder, structures, and sample ID data
-    global boxfolder outputfolder plotfolder datafolder
+% Part 2: Would you like to save the plots generated? 
+% Note:         Select 'y' or 'n'
+save_im = 'y'; 
+
+% Part 3: Are you troubleshooting the fits? 
+% Note:         Select 'y' or 'n'
+trouble = 'n'; 
+
+%% %%%%%%%%%%%%%%%% Parameters Section: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Initialize Data Folder, structures, and sample ID data
+global boxfolder outputfolder plotfolder datafolder
     boxfolder = 'C:\Users\user\Box\Sorted Data FRAP\Sorted Data';
-    datafolder = fullfile(boxfolder,folder1,folder2); % full path where struct will be saved
+    datafolder = fullfile(boxfolder,folder1,folder2); % full path where outputs structures will be saved
     outputfolder = fullfile(boxfolder,'z_outputs');
-    plotfolder = fullfile(boxfolder,folder1,folder2,'z_plots');
+    plotfolder = fullfile(boxfolder,folder1,folder2,'z_plots'); % plot folder within the data folder for the defined experiment
     
-%initialize the structure to store all data in 
+%initialize the structures to store all data in 
 alldata = struct();
 fits = struct();
 images = struct();
 
-% load in the info structure.
+% load in the info structure. This strucutre is made by FRAP_data_cleaner
 id_name = [folder1,'_',folder2,'_','info','.mat'];
 temp_struct = load(fullfile(datafolder,id_name));
 id = temp_struct.id;
 
-%% Reading in data V2 - First Frap image to find bleached circle
-    tic; % timing
-    close all
-for field = fieldnames(id)'
-    position = field{1};
-%     position = 'pos10'
-    % Make a list of each image name in our position folder
-    folder3 = 'frap';
-    list = dir(fullfile(boxfolder,folder1,folder2,folder3,position,'*.tif')); % lists all files with .tif ending in the position folder
-    data = rmfield(list,{'bytes','date','isdir','datenum'});  % cleaning up the data structure
-    n_images = length(list);
+%% Reading in First Frap image to find bleached circle
+tic; % timing
+[id,fits,fig] = fun_first_bleached_frame(id,fits,save_im);
 
-    % define metadata filename for the current position
-    global metadata_filename 
-    txt = dir(fullfile(data(1).folder,'*.txt'));% lists all files with .txt ending
-    metadata_filename = fullfile(txt.folder,txt.name);
-    
-     % Analyze first bleached frame
-    f1 = fullfile(data(t1).folder,data(t1).name);
-    im = imread(f1);
-
-    % now smooth image
-    imsmooth = imgaussfilt(im,8);
-    
-    % for plotting images
-    imlb = min(im(:));
-    imub = mean2(im);
-    T = graythresh(imsmooth); 
-
-    % First we do some pre-analysis on the images to find the bleached circle
-    % bw1 = imbinarize(im,T); % make image black and white
-    bw1 = im2bw(imsmooth,T); % old way to do it seems to work better
-    bwf = imcomplement(bw1);% flip black and white    
-    bw2 = bwareaopen(bwf,300); % remove specks and dots smaller than lim2 pixels in area
-    bw3 = imfill(bw2,8,'holes'); % fill in the holes so we can find the area
-    % filling in the boundaries in black and white image to make solid shapes
-    [B,L] = bwboundaries(bw3,'noholes');
-
-    % These objects are now analyzed by regionprops(). 
-    % The output is a table, called stats, that has the information for each object
-    stats = regionprops('table', L, 'Centroid', 'EquivDiameter','Circularity','Solidity','Area','PixelList'); 
-    
-    if height(stats) == 0 % if no objects meet our criteria
-        disp(['no good droplet found at ', position]) 
-        % remove field name from id list
-        id = rmfield(id,position);
-        center = size(image)/2; % center is the middle of the image
-        radius = 10; % radius set to 10 pixels (too small to be a real object)
-        
-    else % if the drop_info table is not empty
-        % This is the center and radii of every "good" object found. The
-        % code works even if multiple "good" drops are found. 
-        main_idx = find(stats.Solidity == max(stats.Solidity));
-    end
-    
-    % other errors
-    if stats.EquivDiameter(main_idx)/2 < lim1
-        disp(['no good droplet found at ', position]) 
-        id = rmfield(id,position);
-        center = size(image)/2; % center is the middle of the image
-        radius = 10; % radius set to 10 pixels (too small to be a real object)
-    else
-        circularity = stats.Circularity(main_idx);
-        idx = stats.PixelList(main_idx);
-        idx = cell2mat(idx);
-        idx_bleach = sub2ind(size(im),idx(:,2),idx(:,1));
-        center = stats.Centroid(main_idx,:); 
-        radius = (stats.EquivDiameter(main_idx)/2);
-        idx_ref = sub2ind(size(im),idx(:,2)+dy,idx(:,1)+dx);  % reference region dx and dy defined above, convert to pixel # list instead of coords
-        
-        % save the circle and reference regions into fits 
-        fits.(position).('radius') = radius;
-        fits.(position).('center') = center;
-        fits.(position).('idx_ref') = idx_ref;
-        fits.(position).('idx_bleach') = idx_bleach;
-        fits.(position).('imbds') = [imlb,imub]; 
-        fits.(position).('images') = images;
-    end
-           
-        fig = figure('name',position,'visible','on');
-        set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
-        
-        subplot(2,2,1);
-        %show the first image after photobleaching
-            hold on 
-            imshow(im,[imlb,imub],'Border','tight','InitialMagnification', 'fit');
-            viscircles(center,radius,'linewidth',0.2,'color','g');
-            hold off 
-        subplot(2,2,2)
-        %show the laser region and reference region as black circles
-            % modify bw3 to show reference region 
-            bw4 = bw1;
-            bw4(idx_ref) = 0;
-            hold on
-            % first plot the black and white image
-            imshow(bw4,'Border','tight','InitialMagnification', 'fit')
-            h= viscircles(center,radius,'linewidth',0.2,'color','g');
-            hold off 
-        subplot(2,2,3)
-        % line profile across the radius
-            x = [0 size(im,2)];
-            y = [center(2) center(2)];
-            c = improfile(im,x,y); % line profiles 
-            c1 = improfile(imsmooth,x,y); % line profiles 
-            hold on 
-            plot(c(:,1,1),'r')
-            plot(c1(:,1,1),'b')
-            plot([0,2024],[imub,imub]) 
-            % add radius and center
-            plot([center(1)-radius,center(1)+radius],[1.2*mean([imub,imlb]),1.2*mean([imub,imlb])])
-            axis([0 2024 imlb 1.2*imub])
-end  
 disp("bleached circles found in " + string(round(toc)) +" s");
 
-%% save images if selected above
-if save_im == 'y'
-    for field = fieldnames(id)'
-        position = field{1};
-        fig.PaperUnits = 'inches';
-        fig.PaperPosition = [0 0 8 6];             % define location to save the images 
-        a = fieldnames(id);
-        pp = a{1};
-        struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
-        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_frames'];
-        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png 
-    end    
-else    
-end
+%% Reading in the pre-bleach images next
+[fits] = fun_prebleach_frame(id,fits);
 
-%% Readin the pre-bleach images next
-for field = fieldnames(id)'
-    position = field{1};
-    % Make a list of each image name in our position folder
-    folder3 = 'prebleach';
-    list = dir(fullfile(boxfolder,folder1,folder2,folder3,position,'*.tif')); % lists all files with .tif ending in the position folder
-    data = rmfield(list,{'bytes','date','isdir','datenum'});  % cleaning up the data structure
-    % Analyze the pre-bleach image
-    f1 = fullfile(data(1).folder,data(1).name);
-    im0=double(imread(f1));    
-    idx_ref = fits.(position).idx_ref;
-    idx_bleach = fits.(position).idx_bleach;
-    radius = fits.(position).radius;
-    center = fits.(position).center; 
-    
-    % intensity of the reference region before bleaching
-    refI_t0 = mean(im0(idx_ref));
-    % intensity of the spot before bleaching 
-    I_t0 = mean(im0(idx_bleach));
-    
-    % add info to fits.
-    fits.(position).('refI_t0') = refI_t0;
-    fits.(position).('I_t0') = I_t0;
-end  
 %% Reading in the rest of the frap data 
    tic % timing
 for field = fieldnames(id)'
