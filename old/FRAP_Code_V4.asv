@@ -2,7 +2,6 @@
 % Connor Valentine
 %% to do list
 %%%%%%%%%%% urgent
-% - recomment/clean code
 % - save thge D and c vectors for plotting into a new structure to export
 % - add mobile fraction vs C to output
 % - make a sheet showing which experiments are good/favorites
@@ -106,205 +105,71 @@ disp("bleached circles found in " + string(round(toc)) +" s");
 [fits] = fun_prebleach_frame(id,fits);
 
 %% Reading in the rest of the frap data 
-   tic % timing
-for field = fieldnames(id)'
-    position = field{1};
- 
-    % Make a list of each image name in our position folder
-    folder3 = 'frap';
-    list = dir(fullfile(boxfolder,folder1,folder2,folder3,position,'*.tif')); % lists all files with .tif ending in the position folder
-    data = rmfield(list,{'bytes','date','isdir','datenum'});  % cleaning up the data structure
-    n_images = length(list);
-    
-    % define metadata filename for the current position
-    global metadata_filename 
-    txt = dir(fullfile(data(1).folder,'*.txt'));% lists all files with .txt ending
-    metadata_filename = fullfile(txt.folder,txt.name);
-    
-    % pull out the prebleach image info
-    refI_t0 = fits.(position).refI_t0;
-    I_t0 = fits.(position).I_t0;
-    idx_ref = fits.(position).idx_ref;
-    idx_bleach = fits.(position).idx_bleach;
+tic % timing
+[alldata] = fun_frap_frames(id,fits,alldata);
 
-    for t = 1:n_images 
-        % add time information to the data structure
-        [data] = fun_time_V4(data,t); 
-        fits.(position).('pixel_size') = id.(position).pixel_size_manual;
-        
-%         if data(1).pixel_size == 0
-%             fits.(position).('pixel_size') = 0.323; %for 20x in case it was not found 
-%             fits.(position).('pixel_size') = 0.645; % 10x case 
-%         else
-%             fits.(position).('pixel_size') = data(1).pixel_size;
-%         end
+disp(["Data loaded in " + string(round(toc)) + " s."])
 
-        % add pixel intensity information
-        f1 = fullfile(data(t).folder,data(t).name);
-        im = double(imread(f1));
-        I_ti = mean(im(idx_bleach))./I_t0; % normalized by initial Intensity
-        refI_ti = mean(im(idx_ref));
-        if refI_ti ==0
-            refI_ti = 0.001;
-        else
-        end
-        normalized_i = (I_ti).*(refI_t0/refI_ti);
-       % normalized_i = (I_ti./I_t0);
-
-        % adding to data structure
-        data(t).('I_ti') = I_ti;
-        data(t).('refI_ti') = refI_ti;
-        data(t).('ref_ratio') = (refI_t0/refI_ti);
-        data(t).('IN_ti') = normalized_i;
-        alldata.(position) = data;
-    end
-    
-    % add end frame to plots 
-    radius = fits.(position).radius;
-    center = fits.(position).center;
-    imbds = fits.(position).imbds;
-    disp([position,' loaded'])
-end
-a = round(toc);
-disp(['Data loaded in ',num2str(a),' s.'])
-
-
-%% Adding some additional things to the data structure
-% 1. elapsed time from first "initial" frame
-% 2. fitting the data to equation outlined by Cheng 
+%% Performing fits of the normalized data Cheng style
+% fitting the data to equation outlined by Cheng 
 % fit notes: Ifit at end of fit equation ((1-fm)*Ifit) is basically the
 % normalized intensity of first bleached spot after laser beam
 
-for field = fieldnames(alldata)'
-    tic % timing start
-    position = field{1}; % use{} bcuz field is a cell array
-    % elapsed time from received time of first frap frame.
-    time1 = alldata.(position)(1).r_time;
-    time1 = datevec(time1);
-    for i = 1:length(alldata.(position))
-        t = alldata.(position)(i).r_time;
-        t = datevec(t);
-        dt = etime(t,time1); % calculate elapsed time from the first image in seconds
-        alldata.(position)(i).('dt') = dt; %save to data structure
-    end
-    
-    if trouble == 'n' % ignores the fit process if trouble == 'y'
-    % fitting the data to the equation in Cheng paper for FRAP
-    % use x for the variable instead of t
-    x = [alldata.(position).dt]';
-    x = x(t1:end); % could have to adapt this later
-    t_fit = linspace(0,x(end),250)';
-    norm_i = [alldata.(position).IN_ti]';
-    norm_i = norm_i(t1:end);
-    
-    % adding fit parameters 
-    global Ifit
-        I_t1 = alldata.(position)(2).I_ti; % skip laser frame
-        R_t1 = alldata.(position)(2).refI_ti; %% check
-        I_t0 = fits.(position).I_t0;
-        R_t0 = fits.(position).refI_t0;
-        Ifit = (I_t1./I_t0).*(R_t0./R_t1);
-        disp(["Ifit= " + string(Ifit)])
-    
-    % now setting fit options and fitting
-    % bounds on f are set by + or - 5% of the last intensity value now
-    fm0 = norm_i(end);
-    fm0_lb = 0.95*fm0
-    fm0_ub = 1.05*fm0
-    if fm0_ub > 1
-        fm0_ub = 1
-    else
-    end
-    ft = fittype('FRAPfit(x,f,k,tau)');
-        options = fitoptions(ft); 
-        options.StartPoint = [fm0 1 1000];
-        options.Lower = [fm0_lb,0.1,1];
-        options.Upper = [fm0_ub,10,20000];
-        options.Robust = 'Bisquare';  
-    [f,gof] = fit(x,norm_i, ft,options);
-    I_fit = f(t_fit);
-    
-    % confidence intervales from the fit, f
-    ci = confint(f,0.95);
-    x_ci = t_fit;
-    y_ci = predint(f,x_ci,0.95);
-    %shapec and xc can be used to plot the shaded confidence region
-    xc = [x_ci;flip(x_ci)];
-    curve1 = y_ci(:,1);
-    curve2 = y_ci(:,2);
-    shapec = [curve1; flip(curve2)];
-    
-    % calculated diffusivity value
-    ri = fits.(position).radius.*fits.(position).pixel_size;
-    tau = f.tau;
-    dtau = ci(:,3);
-    D = (ri.^2)./(4*tau);
-    Dlow = ((0.95*ri).^2)./(4*max(dtau)); % adds 5% variation to ri
-    Dhigh = ((1.05*ri).^2)./(4*min(dtau)); % adds 5% variation to ri
-    Dneg = D-Dlow;
-    Dpos = Dhigh-D;
-    errD = [Dneg Dpos];
-    % creating new data structure for fit data
-    fits.(position).('fit_info') = f;
-    fits.(position).('ci') = ci;
-    fits.(position).('D') = D;
-    fits.(position).('errD') = errD;
-    fits.(position).('gof') = gof;
-    fits.(position).('I_fit') = I_fit;
-    fits.(position).('t_fit') = t_fit;
-    fits.(position).('xc') = xc;
-    fits.(position).('shapec') = shapec;
-    
-    % check fm value
-    I_inf = alldata.(position)(end).IN_ti;
-    I_1 = alldata.(position)(1).IN_ti;
-    fm_temp = (I_inf - I_1)./(I_t0 - I_1);
-    fits.(position).('fm_calc') = fm_temp;
-    % output values from fit 
-    b = round(toc); % timing
-    disp([position,' data fit in ',num2str(b),' s.'])
-    disp(["f= " + string(f.f) + ",k= "+string(f.k)+",tau= "+string(round(f.tau))]);
-    else
-    end
-    % timing 
-    b = round(toc);
+if trouble == 'n' % ignores the fit process if trouble == 'y'
+    [fits] = fun_intensity_fits(fits,alldata);
+else
 end
-disp('time added')
+
+%% adding variables to id that can be useful for plotting 
+% need for loop to unpack
+i = 0;
+pd = struct(); %plot data structure
+for field = fieldnames(id)'
+    position = field{1};
+    i = i+1;
+    pd.('r')(i) = fits.(position).radius*fits.(position).pixel_size;
+    pd.('c')(i) = id.(position).plwt;
+    pd.('D')(i) = fits.(position).D/55.1; % from cheng to normalize by free soln BSA D
+    pd.('Dneg')(i) = fits.(position).errD(1)/55.1;
+    pd.('Dpos')(i) = fits.(position).errD(2)/55.1;
+    pd.('fm')(i) = fits.(position).fit_info.f;
+    pd.('fmlb')(i) = fits.(position).fit_info.f - fits.(position).ci(1,1); 
+    pd.('fmub')(i) =  fits.(position).ci(2,1) - fits.(position).fit_info.f;
+    
+end
 
 %% Exporting the data structures for future use.
 % can also save individual fields if we want to get crazy
-% first specify output folder (where we want to save the data
-% maybe would be good to do conc instead of pos# here? 
-
-% fix this section to just use folder1 and folder2 for naming
-% then can also get temperature to be a number 
-cd(outputfolder);
 struct_name = [folder1,'_',folder2]; % specify file name prefix
-alldata_name = [struct_name,'_','data','.mat'];
-fits_name = [struct_name,'_','fits','.mat'];
-id_name = [struct_name,'_','id','.mat']; % fwd id struct along with it.
+cd(outputfolder);% first cd to output folder (where we want to save the data)
+
+alldata_name = [struct_name,'_','data','.mat'];% save alldata struct
 save(alldata_name,'alldata'); 
+fits_name = [struct_name,'_','fits','.mat']; % save fits struct
 save(fits_name,'fits');
+id_name = [struct_name,'_','id','.mat']; % save id struct
 save(id_name,'id');
-cd(mainfolder);
+
+cd(mainfolder);% cd back to main folder
 %% plotting the analyzed data 
 C = jet;
 for field = fieldnames(alldata)'
     position = field{1}; % use{} bcuz field is a cell array
-    c_temp = id.(position).plwt;
-    c_temp = [num2str(c_temp), ' wt%'];
+
+    c_temp = [num2str(id.(position).plwt), ' wt%'];
     fig = figure('name',c_temp,'visible','on');
     set(fig, 'WindowStyle', 'Docked');
     
     % plotting data from image intensities, without the fits 
     t = [alldata.(position).dt]';
-    t = t(t1:end);
+    t = t(2:end);
     I = [alldata.(position).I_ti]';
-    I = I(t1:end);
+    I = I(2:end);
     IN = [alldata.(position).IN_ti]';
-    IN = IN(t1:end);
+    IN = IN(2:end);
     ref_ratio = [alldata.(position).ref_ratio]';
-    ref_ratio = ref_ratio(t1:end);
+    ref_ratio = ref_ratio(2:end);
+    Ifitparam = fits.(position).('Ifitparam');
 
     % plotting the data
     hold on
@@ -318,6 +183,7 @@ for field = fieldnames(alldata)'
     xc = fits.(position).xc;
     shapec = fits.(position).shapec;
     fill(xc',shapec,'r','FaceAlpha',0.1,'LineStyle','--','linewidth',1);
+    plot([0,t_fit(end)],[Ifitparam,Ifitparam])
     else 
     end
     title(position);
@@ -342,39 +208,15 @@ end
 
 
 
-%% diffusivity data vs conc
+% diffusivity data vs conc
 if trouble == 'n'
 fig = figure('name','All','visible','on');
 set(fig, 'WindowStyle', 'Docked'); 
 
-% need for loop to unpack
-i = 0;
-fm = [];
-fmlb = [];
-fmub = [];
-for field = fieldnames(alldata)'
-    position = field{1};
-    i = i+1;
-    D = fits.(position).D/55.1;
-    c = id.(position).plwt;
-    pxl = fits.(position).pixel_size;
-    r = fits.(position).radius*pxl;
-    rall(i) =r;
-    conc(i) = c;
-    Dall(i) = D; % from cheng to normalize by free soln BSA D
-    Dneg = fits.(position).errD(1)/55.1;
-    Dpos = fits.(position).errD(2)/55.1;
-    Dnegall(i) = Dneg;
-    Dposall(i) = Dpos;
-    fm(i) = fits.(position).fit_info.f;
-    fmlb(i) = fm(i) - fits.(position).ci(1,1); 
-    fmub(i) =  fits.(position).ci(2,1) -fm(i);
-end
-
 subplot(1,3,1)
     set(gca,'YScale','log');
     hold all
-    errorbar(conc,Dall,Dnegall,Dposall,'db')
+    errorbar(pd.c,pd.D,pd.Dneg,pd.Dpos,'db')
     axis([0.9*min(conc) 1.1*max(conc) 0.7*min(Dall) 2*max(Dall)])
     xlabel([id.(position).plur,' wt%'])
     ylabel('D/D_0 [\mum^2s^{-1}]')
@@ -389,7 +231,7 @@ subplot(1,3,2)
 subplot(1,3,3)
     hold on
     errorbar(conc,fm,fmlb,fmub,'om')
-    axis([0.9*min(conc) 1.1*max(conc) 0.8 1.1])
+    axis([0.9*min(conc) 1.1*max(conc) 0.9*min(fm) 1.1])
     xlabel([id.(position).plur,' wt%'])
     ylabel('mobile fraction [fm]')
 else

@@ -16,10 +16,11 @@
 % PIXEL SIZE ONLY WORKS IF YOU RAN A PIXEL SIZE CALIBRATION AT THE SAME
 % MAGNIFICATION BEFORE YOU STARTED THE EXPERIMENT
 
-function [data] = fun_time_V4(data, t)
-%define global variables 
-global metadata_filename
-
+function [data] = fun_time(data, t)
+%define the metadata filename
+    txt = dir(fullfile(data(1).folder,'*.txt'));% lists all files with .txt ending
+    metadata_filename = fullfile(txt.folder,txt.name);
+    
 % define some other variables 
     frame_filename = data(t).name;
     
