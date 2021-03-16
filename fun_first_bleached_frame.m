@@ -72,8 +72,21 @@ for field = fieldnames(id)' % iterate through the position list in id structure
         fits.(position).('idx_bleach') = sub2ind(size(im),idx(:,2),idx(:,1));
         fits.(position).('idx_ref') = sub2ind(size(im),idx(:,2)+dy,idx(:,1)+dx); 
         fits.(position).('pixel_size') = id.(position).pixel_size_manual;
+        
+        center = fits.(position).center;
+        x = [center(1) center(1)];
+        y = [0 size(im,1)];
+        prof = improfile(imsmooth,x,y); % line profiles 
+        prof = prof(2:end);
+        [pk,lk,w,p] = findpeaks(prof,x,'MinPeakProminence',0.3,'WidthReference','halfprom','MinPeakDistance',100)
     end
-    
+
+
+end  
+
+% plotting loop
+for field = fieldnames(id)' % iterate through the position list in id structure
+    position = field{1};
     %plot figure
     fig = figure('name',position,'visible','on');
         set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
@@ -82,11 +95,16 @@ for field = fieldnames(id)' % iterate through the position list in id structure
         center = fits.(position).center;
         radius = fits.(position).radius;
         idx_ref = fits.(position).idx_ref;
+        % vertical line profile across the radius
+        x = [center(1) center(1)];
+        y = [0 size(im,1)];
+
         subplot(2,2,1);
         %show the first image after photobleaching
             hold on 
             imshow(im,[imlb,imub],'Border','tight','InitialMagnification', 'fit');
             viscircles(center,radius,'linewidth',0.2,'color','g');
+            plot(x,y,'m')
             hold off 
         subplot(2,2,2)
         %show the laser region and reference region as black circles
@@ -99,17 +117,13 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             h= viscircles(center,radius,'linewidth',0.2,'color','g');
             hold off 
         subplot(2,2,3)
-        % line profile across the radius
-            x = [0 size(im,2)];
-            y = [center(2) center(2)];
-            c = improfile(im,x,y); % line profiles 
-            c1 = improfile(imsmooth,x,y); % line profiles 
+        c = improfile(im,x,y); % line profiles 
+        c1 = improfile(imsmooth,x,y); % line profiles 
+        
             hold on 
-            plot(c(:,1,1),'r')
             plot(c1(:,1,1),'b')
-            plot([0,2024],[imub,imub]) 
             % add radius and center
-            plot([center(1)-radius,center(1)+radius],[1.2*mean([imub,imlb]),1.2*mean([imub,imlb])])
+            plot([center(2)-radius,center(2)+radius],[1.2*mean([imub,imlb]),1.2*mean([imub,imlb])])
             axis([0 2024 imlb 1.2*imub])
 
     % save images if selected above
@@ -124,7 +138,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
         print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png  
     else    
     end
-end  
+end
 % designate the outputs properly
 struct_out1 = id;
 struct_out2 = fits;

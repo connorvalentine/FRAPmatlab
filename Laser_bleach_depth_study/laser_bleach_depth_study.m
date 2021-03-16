@@ -86,7 +86,7 @@ fig = figure('name','prebleach','visible','on');
         plot(c(:,1,1),'r')
         plot(c_smooth(:,1,1),'b')
         % add radius and center
-        axis([0 2048 3500 7500])
+        axis([0 2048 1000 7500])
 %% reading in each image to find the circle and make a line profile 
 tic; % timing
 % define other parameters 
@@ -223,7 +223,7 @@ for i = 1:length(data)
             hold on
             plot(data(i).lk,data(i).pk,'o','MarkerSize',12)
             errorbar(lk,1-(pk./2),w/2,'horizontal','color','k') % half prom
-            errorbar(lk,1.05*(1-(pk./2)),radius,'horizontal','color','r') %imfind technique
+            errorbar(lk,1.05*(1-(pk./2)),radius,'horizontal','color','r') %imfind technique half height
             plot(data(i).cns./pb.sprofile,'b')
             axis([0 2048 0.4 1.1])
 end
@@ -274,13 +274,4 @@ fig = figure('name','radius','visible','on');
         xlabel('bleach time')
         ylabel('center location by peakfinder')  
 %% testing environments 
-
-fig = figure('name','testing','visible','on');
-    set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
-    y = [data(end).cs];
-    y2 = [pb.sprofile];
-    hold on
-    plot(y2)
-    plot(y*data(end).norm_factor)
-   
     

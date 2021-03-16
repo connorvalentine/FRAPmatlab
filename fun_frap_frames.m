@@ -12,10 +12,6 @@ for field = fieldnames(id)'
     position = field{1};
     
     % pull out the prebleach image info from fits structure
-    refI_t0 = fits.(position).refI_t0;
-    I_t0 = fits.(position).I_t0;
-    idx_ref = fits.(position).idx_ref;
-    idx_bleach = fits.(position).idx_bleach;
     
     % Make a list of each image name in our position folder
     list = dir(fullfile(boxfolder,folder1,folder2,folder3,position,'*.tif')); % lists all files with .tif ending in the position folder
