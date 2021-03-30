@@ -6,7 +6,7 @@
 %% inputs and outputs
 % inputs: id structure and fits structure. Save_im is 'y' or 'no'
 
-function [struct_out1,struct_out2,fig_out] = fun_radius_finder(id,fits,save_im)
+function [struct_out1,struct_out2,fig_out,stats] = fun_radius_finder(id,fits,save_im)
 % define the global variables
 global boxfolder folder1 folder2 plotfolder
 
@@ -42,42 +42,61 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     bwf = imcomplement(bw1);% flip black and white    
     bw2 = bwareaopen(bwf,300); % remove specks and dots smaller than lim2 pixels in area
     bw3 = imfill(bw2,8,'holes'); % fill in the holes so we can find the area
+    
     % filling in the boundaries in black and white image to make solid shapes
     [B,L] = bwboundaries(bw3,'noholes');
     
     % These objects are now analyzed by regionprops(). 
     % The output is a table, called stats, that has the information for each object
     stats = regionprops('table', L, 'Centroid', 'EquivDiameter','Circularity','Solidity','Area','PixelList');
+    fits.(position).('objects_in_image') = stats;        % the main object is the most solid one usually
     
+    lim1 = 50; % minimum pixel radius to look for on most solid droplet 
+    if height(stats) == 0 | stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1  
+        fits.(position).('center') = 1024; % center is the middle of the image
+        fits.(position).('radius') = 10;% radius set to 10 pixels (too small to be a real object)
+    else
+        main_idx = find(stats.Solidity == max(stats.Solidity));
+        fits.(position).('radius') = (stats.EquivDiameter(main_idx)/2);
+        fits.(position).('center') = stats.Centroid(main_idx,:); 
+    end
+    fits.(position).('pixel_size') = id.(position).pixel_size_manual;
+
+end
+
+% now second loop to correct for weird centers by using other centers
+for field = fieldnames(id)' % iterate through the position list in id structure
+    position = field{1};
+    stats = fits.(position).objects_in_image;
     % now we sort through the objects to make sure the bleached circle is found
     % if no droplets are found (height of table == 0) or the most solid
     % droplet is very small (<lim1) then we advance with artificial values
     % for the center of the droplet.
     lim1 = 50; % minimum pixel radius to look for on most solid droplet 
     if height(stats) == 0 | stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1
-        disp(['no droplets found at ', position]) 
-        % remove field name from id list
-        % id = rmfield(id,position);
+        if height(stats) == 0
+            disp(['no droplets found', position])
+        else
+            disp(['no droplets found at ', position]) 
+        end 
+
         temp_pos_list = fieldnames(id)';
         for i = 1:length(fieldnames(id))
             temp_pos = temp_pos_list{i};
-            if strcmp(temp_pos,position)
+            temp_stats = fits.(temp_pos).objects_in_image;
+            
+            if height(temp_stats) == 0 | temp_stats.EquivDiameter(find(temp_stats.Solidity == max(temp_stats.Solidity)))/2 < lim1
                 continue
             else 
-                break
+                main_idx = find(temp_stats.Solidity == max(temp_stats.Solidity));
+                fits.(position).('radius') = (temp_stats.EquivDiameter(main_idx)/2);
+                fits.(position).('center') = temp_stats.Centroid(main_idx,:); 
             end
         end
-
+        
         disp(['using center of ',temp_pos, ' instead']);
-        fits.(position).('center') = fits.(temp_pos).center; % center is the middle of the image
-        fits.(position).('radius') = 10;% radius set to 10 pixels (too small to be a real object)
     else 
-        % the main object is the most solid one usually
-        main_idx = find(stats.Solidity == max(stats.Solidity));
-        fits.(position).('radius') = (stats.EquivDiameter(main_idx)/2);
-        fits.(position).('center') = stats.Centroid(main_idx,:); 
     end
-    fits.(position).('pixel_size') = id.(position).pixel_size_manual;
     
     % now we take some image profiles based on the center of the laser hole
     % First we make a vertical line profile across the radius

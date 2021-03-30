@@ -2,8 +2,14 @@
 % Connor Valentine
 %% to do list
 %%%%%%%%%%% urgent
+% - more durable way to find circles
+% - change the trial numbers so that the entire experiment done on the same
+% date all has same trial number
 % - look up what the laser focus knob is actually doing
 % - work on the master step3 file so can compare data faster
+% - warning when first bleached frame isn't actually the lowest
+% - error flag for initial bleaching depth 
+% - gaussian fit onto the shoulders.
 
 %%%%%%%%%%% primary
 % - is photobleaching a permanent phenomena? irreversible?
@@ -54,8 +60,8 @@
 %               frap folder must be named 'frap'
 
 global folder1 folder2
-    folder1 = 'P123_BSA_45C';
-    folder2 = 'trial_1';
+    folder1 = 'F127_BSA_25C';
+    folder2 = 'trial_5';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
@@ -87,7 +93,7 @@ id = temp_struct.id;
 % radius is found using improfile and fitting a gaussian curve to it
 tic; % timing
 
-[id,fits,fig] = fun_radius_finder(id,fits,save_im);
+[id,fits,fig,stats] = fun_radius_finder(id,fits,save_im);
 
 disp("bleached circles found in " + string(round(toc)) +" s");
 %% Reading in the rest of the frap data 

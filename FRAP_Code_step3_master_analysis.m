@@ -41,12 +41,12 @@
     fits = struct();
 % load in the info structure.
     cd(outputfolder)
-    id.F87 = load('F87_BSA_25C_trial_1_id').id;
-    fits.F87 = load('F87_BSA_25C_trial_1_fits').fits;
-    id.F127 = load('F127_BSA_25C_trial_3_id').id;
-    fits.F127 = load('F127_BSA_25C_trial_3_fits').fits;
-    id.P123 = load('P123_BSA_25C_trial_1_id').id;
-    fits.P123 = load('P123_BSA_25C_trial_1_fits').fits;    
+    id.F87 = load('F87_BSA_25C_trial_5_id').id;
+    fits.F87 = load('F87_BSA_25C_trial_5_fits').fits;
+    id.F127 = load('F127_BSA_25C_trial_5_id').id;
+    fits.F127 = load('F127_BSA_25C_trial_5_fits').fits;
+    id.P123 = load('P123_BSA_25C_trial_5_id').id;
+    fits.P123 = load('P123_BSA_25C_trial_5_fits').fits;    
     
     cd(mainfolder)
 %% cheng comparison data

@@ -28,11 +28,11 @@
     mainfolder = cd;
     
 %% define the folder/experiment we are going to make a parameter structure for.
-    folder1 = 'F127_BSA_45C';
-    folder2 ='trial_1';
+    folder1 = 'F127_BSA_25C';
+    folder2 ='trial_5';
 
 %% Specify the parameters you want to save that do not change. Experimental info
-
+% 
     pluronic = 'F127';
     conc = [17.5;20;22.5;25;27.5;30];   
 
@@ -41,7 +41,7 @@
 
 %     pluronic = 'P123';
 %     conc = [20;25;27.5;30;32.5;35]; %concentrations in order of position # from least to greatest
-    temperature = '45C'; % needs to be string in this format. can pull num out later if needed
+    temperature = '25C'; % needs to be string in this format. can pull num out later if needed
     magnification = '10X';
     %magnification = '20X';
 
