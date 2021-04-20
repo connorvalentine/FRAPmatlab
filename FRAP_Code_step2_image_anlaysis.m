@@ -2,14 +2,13 @@
 % Connor Valentine
 %% to do list
 %%%%%%%%%%% urgent
-% - more durable way to find circles
-% - change the trial numbers so that the entire experiment done on the same
-% date all has same trial number
+% - move the plot folder to the outputs folder where the matlab data is
+% stored
+% - move experiments off of this hard-drive 
+% - revisit the movie making to be able to see drift, etc
 % - look up what the laser focus knob is actually doing
 % - work on the master step3 file so can compare data faster
-% - warning when first bleached frame isn't actually the lowest
 % - error flag for initial bleaching depth 
-% - gaussian fit onto the shoulders.
 
 %%%%%%%%%%% primary
 % - is photobleaching a permanent phenomena? irreversible?
@@ -18,7 +17,6 @@
 
 %%%%%%%%%%% thoughts
 % - uniformity metrics for the bleached spot and the reference region
-% - reference sample in each array? HDFL gel?
 
 %%%%%%%%%%% Experiments to run %%%%%%%%%%%%%%%%%%%%%
 % - energy balance on laser to make sure it isnt heating up
@@ -60,8 +58,8 @@
 %               frap folder must be named 'frap'
 
 global folder1 folder2
-    folder1 = 'F127_BSA_25C';
-    folder2 = 'trial_5';
+    folder1 = 'F127_BSA_45C';
+    folder2 = 'trial_6';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'

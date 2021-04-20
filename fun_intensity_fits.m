@@ -33,7 +33,8 @@ for field = fieldnames(alldata)'
     norm_i(NANind) = [];
     x(NANind) = [];
     
-    t_fit = linspace(0,x(end),250)'; % fake time data to put into the fit equation
+    % fake time data to put into the fit equation
+    t_fit = linspace(0,x(end),250)'; 
     
     % fm is the mobile fraction of proteins. 
     % in this case, it is taking as the ratio of the amount of intensity
@@ -46,6 +47,12 @@ for field = fieldnames(alldata)'
     fm0_ub = 1.1*fm0;  
     if fm0_ub > 1
         fm0_ub = 1;
+    else
+    end
+    
+    % sometimes fm lb is > fm ub
+    if fm0_lb > fm0_ub
+        fm0_lb = fm0_ub*0.9;
     else
     end
 
@@ -71,10 +78,11 @@ for field = fieldnames(alldata)'
         options2.DiffMinChange = 0.001;
         options2.TolFun = 1e-8;
         options2.Robust = 'off';  
+        
     % perform the fit to the data
     [f,gof,output] = fit(x,norm_i, ft,options2);    
     I_fit = f(t_fit);   
-%     
+   
     % confidence intervales from the fit, f
     ci = confint(f,0.95);
     x_ci = t_fit;
