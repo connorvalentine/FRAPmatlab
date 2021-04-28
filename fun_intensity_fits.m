@@ -33,7 +33,8 @@ for field = fieldnames(alldata)'
     norm_i(NANind) = [];
     x(NANind) = [];
     
-    t_fit = linspace(0,x(end),250)'; % fake time data to put into the fit equation
+    % fake time data to put into the fit equation
+    t_fit = linspace(0,x(end),250)'; 
     
     % fm is the mobile fraction of proteins. 
     % in this case, it is taking as the ratio of the amount of intensity
@@ -46,6 +47,17 @@ for field = fieldnames(alldata)'
     fm0_ub = 1.1*fm0;  
     if fm0_ub > 1
         fm0_ub = 1;
+    else
+    end
+    
+    % sometimes fm lb is > fm ub
+    if fm0_lb > fm0_ub
+        fm0_lb = fm0_ub*0.9;
+    else
+    end
+    
+    if fm0_lb > 1
+        fm0_lb =1;
     else
     end
 
@@ -63,18 +75,26 @@ for field = fieldnames(alldata)'
     % double fit process to place bounds on f.
     dlower = 0.5;
     dupper = 2;
+    
+    % sometimes the lower bound will be greater than 1, just a hard fix
+    if fm0_lb >= 1
+        fm0_lb = 0.99;
+    else
+    end
+    
     ft2 = fittype('fun_FRAPfit(x,f,k,tau_n)');
         options2 = fitoptions(ft2);
         options2.StartPoint = [fm0   ,f2.k     ,f2.tau_n    ];
-        options2.Lower =      [fm0_lb,0.9*f2.k ,dlower*f2.tau_n];
-        options2.Upper =      [1     ,1.1*f2.k ,dupper*f2.tau_n];
+        options2.Lower =      [fm0_lb,0.9*abs(f2.k) ,dlower*abs(f2.tau_n)];
+        options2.Upper =      [1     ,1.1*abs(f2.k) ,dupper*abs(f2.tau_n)];
         options2.DiffMinChange = 0.001;
         options2.TolFun = 1e-8;
         options2.Robust = 'off';  
+        
     % perform the fit to the data
     [f,gof,output] = fit(x,norm_i, ft,options2);    
     I_fit = f(t_fit);   
-%     
+   
     % confidence intervales from the fit, f
     ci = confint(f,0.95);
     x_ci = t_fit;
