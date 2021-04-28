@@ -8,7 +8,7 @@
 
 function [struct_out1,struct_out2,fig_out,stats] = fun_radius_finder(id,fits,save_im)
 % define the global variables
-global boxfolder folder1 folder2 plotfolder
+global boxfolder folder1 folder2 plotfolder npoints
 
 % define other parameters 
 
@@ -65,9 +65,12 @@ for field = fieldnames(id)' % iterate through the position list in id structure
 end
 
 % now second loop to correct for weird centers by using other centers
+counter = 0;
 for field = fieldnames(id)' % iterate through the position list in id structure
+
     position = field{1};
     stats = fits.(position).objects_in_image;
+    
     % now we sort through the objects to make sure the bleached circle is found
     % if no droplets are found (height of table == 0) or the most solid
     % droplet is very small (<lim1) then we advance with artificial values
@@ -180,6 +183,11 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     fits.(position).('I_t0') = I_t0;
     fits.(position).('ref_0') = ref_0;
     
+    if counter == npoints
+        counter = 0;
+    else
+    end
+    counter = counter +1;
     fig = figure('name',position,'visible','on');
         set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
         imlb = fits.(position).imbds(1);
@@ -191,7 +199,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             imshow(im1,[imlb,imub],'Border','tight','InitialMagnification', 'fit');
             viscircles(center,radius,'linewidth',0.2,'color','g');
             plot(profile_line_x,profile_line_y,'m')
-            title('image1 with profile line')
+            title('image1 profile line')
             hold off 
         if plotflag == 'y'
         subplot(2,2,2)
@@ -201,19 +209,19 @@ for field = fieldnames(id)' % iterate through the position list in id structure
 %             imshow(masked_image1,[imlb,imub],'Border','tight','InitialMagnification', 'fit')
             imshow(masked_reference_image1+masked_image1,[imlb,imub],'Border','tight','InitialMagnification', 'fit')
             h= viscircles(center,radius,'linewidth',0.2,'color','g');
-            title('green imfind vs white improfile')
+            title('Gr imfind V. regions')
             hold off 
         subplot(2,2,3)
             hold on 
             plot(profile1,'b')
             plot(profile0,'g')
-            title('prebleach profile vs im1 profile')
+            title('prebleach v. im1')
             axis([0 2024 min(profile1)*0.8 max(profile0)*1.2])
         subplot(2,2,4)
             hold on 
             plot(f,x_norm,y_norm)
             errorbar(peak_center,peak_height/2,FWHM/2,'horizontal')
-            title('normalized im1 profile with guassian peak')
+            title('norm im1 & Guass')
             axis([0 2024 0  1])
         else
         end
@@ -224,7 +232,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
         a = fieldnames(id);
         pp = a{1};
         struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
-        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_frames'];
+        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_frames_',num2str(counter)];
         plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
         print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png  
     else    

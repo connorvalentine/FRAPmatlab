@@ -55,6 +55,11 @@ for field = fieldnames(alldata)'
         fm0_lb = fm0_ub*0.9;
     else
     end
+    
+    if fm0_lb > 1
+        fm0_lb =1;
+    else
+    end
 
     % using this as a first guess point for the coefficients
     ft = fittype('fun_FRAPfit(x,f,k,tau_n)');
@@ -70,11 +75,18 @@ for field = fieldnames(alldata)'
     % double fit process to place bounds on f.
     dlower = 0.5;
     dupper = 2;
+    
+    % sometimes the lower bound will be greater than 1, just a hard fix
+    if fm0_lb >= 1
+        fm0_lb = 0.99;
+    else
+    end
+    
     ft2 = fittype('fun_FRAPfit(x,f,k,tau_n)');
         options2 = fitoptions(ft2);
         options2.StartPoint = [fm0   ,f2.k     ,f2.tau_n    ];
-        options2.Lower =      [fm0_lb,0.9*f2.k ,dlower*f2.tau_n];
-        options2.Upper =      [1     ,1.1*f2.k ,dupper*f2.tau_n];
+        options2.Lower =      [fm0_lb,0.9*abs(f2.k) ,dlower*abs(f2.tau_n)];
+        options2.Upper =      [1     ,1.1*abs(f2.k) ,dupper*abs(f2.tau_n)];
         options2.DiffMinChange = 0.001;
         options2.TolFun = 1e-8;
         options2.Robust = 'off';  

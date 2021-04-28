@@ -2,21 +2,16 @@
 % Connor Valentine
 %% to do list
 %%%%%%%%%%% urgent
-% - move the plot folder to the outputs folder where the matlab data is
-% stored
+% - good idea to save another matlab structure that eliminates certain
+% positions from being plotted when importing into the analysis main filer
+
 % - move experiments off of this hard-drive 
-% - revisit the movie making to be able to see drift, etc
 % - look up what the laser focus knob is actually doing
-% - work on the master step3 file so can compare data faster
-% - error flag for initial bleaching depth 
 
 %%%%%%%%%%% primary
 % - is photobleaching a permanent phenomena? irreversible?
 % - why is radius so different than cheng??
 % - cap fm off at one for the fits?
-
-%%%%%%%%%%% thoughts
-% - uniformity metrics for the bleached spot and the reference region
 
 %%%%%%%%%%% Experiments to run %%%%%%%%%%%%%%%%%%%%%
 % - energy balance on laser to make sure it isnt heating up
@@ -69,13 +64,19 @@ save_im = 'y';
 % Note:         Select 'y' or 'n'
 trouble = 'n'; 
 
+% do you want to make movies? (yes is first time analyzing)
+global makemovies npoints
+makemovies = 'y';
+
+% number of points per wt%. is usually 3 now.
+npoints = 3;
 %% %%%%%%%%%%%%%%%% Parameters Section: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Initialize Data Folder, structures, and sample ID data
 global boxfolder outputfolder plotfolder datafolder
     boxfolder = 'C:\Users\user\Box\Sorted Data FRAP\Sorted Data';
     datafolder = fullfile(boxfolder,folder1,folder2); % full path where outputs structures will be saved
     outputfolder = fullfile(boxfolder,'z_outputs');
-    plotfolder = fullfile(boxfolder,folder1,folder2,'z_plots'); % plot folder within the data folder for the defined experiment
+    plotfolder = fullfile(boxfolder,'z_outputs','z_plots'); % plot folder within the data folder for the defined experiment
     
 %initialize the structures to store all data in 
 alldata = struct();
@@ -129,9 +130,16 @@ end
 
 % plotting the analyzed data 
 C = jet;
+counter = 0;
 for field = fieldnames(alldata)'
+    if counter == npoints
+        counter = 0;
+    else
+    end
+    counter = counter +1;
+    
     position = field{1}; % use{} bcuz field is a cell array
-
+    
     c_temp = [num2str(id.(position).plwt), ' wt%'];
     fig = figure('name',c_temp,'visible','on');
     set(fig, 'WindowStyle', 'Docked');
@@ -168,13 +176,16 @@ for field = fieldnames(alldata)'
     ylabel('Normalized Intensity');
 
 % save images if selected above
+
 if save_im == 'y'
         fig.PaperUnits = 'inches';
         fig.PaperPosition = [0 0 8 6];             % define location to save the images 
         a = fieldnames(id);
         pp = a{1};
+        %% check if this wt% has been analyzed yet 
+        
         struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
-        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_intensity_fit'];
+        plot_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','_intensity_fit_',num2str(counter)];
         plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
         print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png  
 else    
