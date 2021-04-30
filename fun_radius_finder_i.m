@@ -1,18 +1,19 @@
 %% inputs and outputs
 % inputs: id structure and fits structure. Save_im is 'y' or 'no'
 % need to import position as well
-function [circle_mask,reference_mask,center,ref_i,I_ti] = fun_radius_finder_i(position,imi,fits,previous_center_coords,previous_ref_intensity,t)
+function [circle_mask,reference_mask,center,ref_i,I_ti,ref_0_i] = fun_radius_finder_i(position,imi,fits,previous_center_coords,previous_norm_ratio,t)
     im0 = fits.(position).im0;
     im0sm = fits.(position).im0sm2;
-    previous_norm_ratio = fits.(position).ref_0/previous_ref_intensity;
     radius = fits.(position).radius; % using same radius at all time points, just changing the center
     %Next we load the image we want to use after bleaching
     imism = imgaussfilt(imi,69).*previous_norm_ratio; % now smooth image, sorta intensity adjusted for photobleaching
     
     imTEST = 10000*abs(1- round(double(imism)./double(im0sm),1));% because each image is an int, the imTest is all int, rounded to either 0 or 10,000
-     % First we do some pre-analysis on the images 
+    % First we do some pre-analysis on the images 
     T = graythresh(imTEST);
+%     T2 = graythresh(imTEST2);
     bw1 = imbinarize(imTEST,'adaptive','ForegroundPolarity','dark','Sensitivity',T);
+%     bw2 = bwareaopen(bw2,10000); 
 %     bw1 = im2bw(imTEST,T); % old way 
     bw3 = bwareaopen(bw1,10000); % (may need to be reverseD?)remove specks and dots smaller than 10000 pixels in area
 %     [B,L] = bwboundaries(bw3,'holes'); % filling in the boundaries in black and white image to make solid shapes
@@ -20,6 +21,7 @@ function [circle_mask,reference_mask,center,ref_i,I_ti] = fun_radius_finder_i(po
     % These objects are now analyzed by regionprops(). 
     % The output is a table, called stats, that has the information for each object
     stats = regionprops('table', bw3, 'Centroid', 'EquivDiameter','Circularity','Solidity','Area','PixelList');
+
     % finding the distance of each object in the image from the previous
     % image
     dist = ones(height(stats),1);
@@ -28,17 +30,25 @@ function [circle_mask,reference_mask,center,ref_i,I_ti] = fun_radius_finder_i(po
         dist(k) = sqrt((previous_center_coords(1) - cent(1)).^2 + (previous_center_coords(2) - cent(2)).^2);
     end
     stats.('distance') = dist;
+    
+    stats2 = stats(find(stats.Area < 500000),:);
+    
+    main_idx = find(stats2.distance == min(stats2.distance));
 
-    main_idx = find(stats.distance == min(stats.distance));
-
-    if height(stats) == 0 || stats(main_idx,:).distance > 200
+    if height(stats2) == 0 | stats2(main_idx,:).distance > 200
         center = previous_center_coords; % center is the middle of the image
         disp('center moved too far')
-        disp(stats(main_idx,:).distance)
+        disp(t)
+        disp(stats2(main_idx,:))
     else
-        center = stats.Centroid(main_idx,:);
+        center = stats2.Centroid(main_idx,:);
     end
-
+    
+%     disp('stats')
+%     disp(stats)
+%     disp(main_idx)
+%     disp(stats2)
+    
     % make a circle mask defined by the FWHM of the bleached area
     circleCenterX = center(1);
     circleCenterY = center(2); % might have these flipped
@@ -62,8 +72,12 @@ function [circle_mask,reference_mask,center,ref_i,I_ti] = fun_radius_finder_i(po
     masked_reference_image1 = imi;
     masked_reference_image1(~ reference_mask) = 0;    
     ref_i = mean(masked_reference_image1(masked_reference_image1 > 0));
-% 
-     if t == 2 || mod(t,2) == 0
+
+    masked_reference_image0 = im0;
+    masked_reference_image0(~ reference_mask) = 0;
+    ref_0_i = mean(masked_reference_image0(masked_reference_image0 > 0)); % find mean of all pixels that are not == 0
+     
+    if t == 2 || mod(t,2) == 0
          
         subplot(1,2,1) %show the first image after photobleaching 
             imshow(imi,[min(imi(:)),max(imi(:))],'Border','tight','InitialMagnification', 'fit');
@@ -75,11 +89,12 @@ function [circle_mask,reference_mask,center,ref_i,I_ti] = fun_radius_finder_i(po
             imshow(bw3,[0,1],'Border','tight','InitialMagnification', 'fit');
             hold on
             viscircles(center,radius,'linewidth',0.2,'color','g','LineStyle',':');
-            for k = 1:height(stats)
-                viscircles(stats.Centroid(k,:),stats.EquivDiameter(k,1)/2,'linewidth',0.2,'color','b');
+            for k = 1:height(stats2)
+                viscircles(stats2.Centroid(k,:),stats2.EquivDiameter(k,1)/2,'linewidth',0.2,'color','b');
             end
             hold off
             title(["analyzed at time " + string(t)])
+
         drawnow % necessary or it wont plot
      else
      end

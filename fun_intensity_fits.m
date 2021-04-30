@@ -107,8 +107,8 @@ for field = fieldnames(alldata)'
         shapec = [curve1; flip(curve2)];
 
        % calculated diffusivity value
-        ri = fits.(position).FWHM .*0.5 .*fits.(position).pixel_size;
-        dr = (fits.(position).dFWHM(2) - fits.(position).FWHM).*0.5 .*fits.(position).pixel_size;
+        ri = fits.(position).radius .*fits.(position).pixel_size;
+        dr = (fits.(position).err_radius(2) - fits.(position).radius) .*fits.(position).pixel_size;
         tau = 1000*f.tau_n;
         dtau = 1000*ci(:,end);
         D = (ri.^2)./(4*tau);
@@ -134,8 +134,9 @@ for field = fieldnames(alldata)'
          % output values from fit 
         disp(["f= " + string(f.f) + ",k= "+string(f.k)+",tau= "+string(1000*f.tau_n)]);
         disp(ci)
-    catch 
-        warning('Could not fit intensity data')
+    catch  e
+        warning('fit failed for ')
+        fprintf(1,'error message \n%s',e.message);
         fits.(position).('fit_info') = [];
         fits.(position).('ci') = [];
         fits.(position).('D') = [];

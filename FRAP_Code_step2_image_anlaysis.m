@@ -110,7 +110,6 @@ disp(["First Circles found in " + string(round(toc)) + " s."])
 
 % disp(["Data loaded in " + string(round(toc)) + " s."])
 for field = fieldnames(id)' % iterate through the position list in id structure
-%     field = fieldnames(id)';
     tic
     position = field{1};
     folder3 = 'frap';
@@ -144,13 +143,12 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             if t == 1
                 previous_center = fits.(position).center;
                 previous_radius = fits.(position).radius;
-                previous_ref_intensity = fits.(position).ref_0;
+                ref_0_i = fits.(position).ref_0;
                 ref_i = fits.(position).ref_1;
                 I_ti = fits.(position).I_t1;
             else 
-                [circle_mask, reference_mask,center,ref_i,I_ti] = fun_radius_finder_i(position,imi,fits,previous_center,previous_ref_intensity,t);
+                [circle_mask, reference_mask,center,ref_i,I_ti,ref_0_i] = fun_radius_finder_i(position,imi,fits,previous_center,previous_norm_ratio,t);
                 previous_center = center;
-                previous_ref_intensity = ref_i;
             end
             
             if ref_i ==0
@@ -158,7 +156,8 @@ for field = fieldnames(id)' % iterate through the position list in id structure
                 disp(position)
                 disp('reference region mistake at frame #' +string(t))
             else
-                norm_ratio =  fits.(position).ref_0/ref_i;
+                norm_ratio =  ref_0_i/ref_i;
+                previous_norm_ratio = norm_ratio; % for feeding into next loop
             end
             
             % normalized by prebleach Intensity(I_t0)
@@ -244,9 +243,9 @@ for field = fieldnames(id)'
     position = field{1};
     i = i+1;
     if fits.(position).GoodFit == 'y'
-        pd.('r')(i) = fits.(position).FWHM .* 0.5 .*fits.(position).pixel_size;
-        pd.('rlb')(i) = (fits.(position).FWHM - fits.(position).dFWHM(1)).* 0.5 .*fits.(position).pixel_size;
-        pd.('rub')(i) = (fits.(position).dFWHM(2) - fits.(position).FWHM).* 0.5 .*fits.(position).pixel_size;
+        pd.('r')(i) = fits.(position).radius .*fits.(position).pixel_size;
+        pd.('rlb')(i) = (fits.(position).radius - fits.(position).err_radius(1)).*fits.(position).pixel_size;
+        pd.('rub')(i) = (fits.(position).err_radius(2) - fits.(position).radius).*fits.(position).pixel_size;
         pd.('c')(i) = id.(position).plwt;
         pd.('D')(i) = fits.(position).D/55.1; % from cheng to normalize by free soln BSA D
         pd.('Dneg')(i) = fits.(position).errD(1)/55.1;
