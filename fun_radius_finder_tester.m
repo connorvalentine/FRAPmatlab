@@ -10,6 +10,9 @@ function [struct_out1,struct_out2,fig_out,stats] = fun_radius_finder(id,fits,sav
 % define the global variables
 global boxfolder folder1 folder2 plotfolder npoints
 
+% define other parameters 
+
+
 for field = fieldnames(id)' % iterate through the position list in id structure
     position = field{1};
     plotflag = 'y';
@@ -21,7 +24,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     f1 = fullfile(data(1).folder,data(1).name); % loads the pre-bleach image
     im0 = imread(f1);    
     im0sm = imgaussfilt(im0,2); % smoothed prebleach image
-    fits.(position).('im0') = im0; % add info to fits.
+    fits.(position).('pbim') = im0; % add info to fits.
     
     % Second we load the first image after bleaching
     folder3 = 'frap';
@@ -29,8 +32,8 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     data = rmfield(list,{'bytes','date','isdir','datenum'});  % cleaning up the data structure
     f1 = fullfile(data(2).folder,data(2).name); % Load first bleached frame - frame 1 is the image of the laser.
     im1 = imread(f1);
-    fits.(position).('im1') = im1;
     im1sm = imgaussfilt(im1,2); % now smooth image
+    fits.(position).('imbds') = [min(im1(:)),mean2(im1)]; % parameters for plotting images
     
     imTEST = 10000*(1- im1sm./im0sm); % because each image is an int, the imTest is all int, rounded to either 0 or 10,000
     imlbtest = min(imTEST(:));
@@ -55,7 +58,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     
     % now we iterate through the ojects found and choose the best one. This
     % could be improved some what I think
-    lim1 = 10; % minimum pixel radius to look for on most solid droplet 
+    lim1 = 50; % minimum pixel radius to look for on most solid droplet 
     if height(stats) == 0 | stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1  
         fits.(position).('center') = [1024,1024]; % center is the middle of the image
         fits.(position).('radius') = 10;% radius set to 10 pixels (too small to be a real object)
@@ -72,13 +75,13 @@ end
 counter = 0; % position #(1-3) at current sample, is tracked to save images, etc properly.
 for field = fieldnames(id)' % iterate through the position list in id structure
     position = field{1};
+    stats = fits.(position).objects_in_image;
     
     % now we sort through the objects to make sure the bleached circle is found
     % if no droplets are found (height of table == 0) or the most solid
     % droplet is very small (<lim1) then we advance with artificial values
     % for the center of the droplet.
-    lim1 = 10; % minimum pixel radius to look for on most solid droplet 
-    stats = fits.(position).objects_in_image;
+    lim1 = 50; % minimum pixel radius to look for on most solid droplet 
     if height(stats) == 0 | stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1
         if height(stats) == 0
             disp(['no droplets found', position])
@@ -110,17 +113,6 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     radius = fits.(position).radius;
     profile_line_x = [center(1) center(1)];
     profile_line_y = [0 size(im1,1)];
-    
-    % import the data for this test
-    im0 = fits.(position).im0;
-    im0sm = imgaussfilt(im0,2); % smoothed prebleach image
-    im1 = fits.(position).im1;
-    im1sm = imgaussfilt(im1,2); % smoothed prebleach image
-%     imTEST = 10000*(1- im1sm./im0sm); % because each image is an int, the imTest is all int, rounded to either 0 or 10,000
-%     imlbtest = min(imTEST(:));
-%     imubtest = mean2(imTEST);
-    imlb = min(im1(:));
-    imub = max(im1(:));
     
     % Now we record the profile on the first bleached image
     prof = improfile(im1sm,profile_line_x,profile_line_y); % line profiles 
@@ -206,17 +198,25 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     
     fig = figure('name',position,'visible','on');
         set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
-        subplot(2,2,1);        %show the first image after photobleaching
+%         imlb = fits.(position).imbds(1);
+%         imub = fits.(position).imbds(2);
+
+        subplot(2,2,1);
+        %show the first image after photobleaching
             hold on 
-            imshow(im1,[imlb,imub],'Border','tight','InitialMagnification', 'fit');
+            imshow(imTEST,[imlbtest,imubtest],'Border','tight','InitialMagnification', 'fit');
             viscircles(center,radius,'linewidth',0.2,'color','g');
             plot(profile_line_x,profile_line_y,'m')
             title('image1 profile line')
             hold off 
         if plotflag == 'y'
-        subplot(2,2,2) %show the laser region k circles
+        subplot(2,2,2)
+        %show the laser region k circles
             hold on
+            % first plot the black and white image
+%             imshow(masked_image1,[imlb,imub],'Border','tight','InitialMagnification', 'fit')
             imshow(masked_reference_image1+masked_image1,[imlb,imub],'Border','tight','InitialMagnification', 'fit')
+            h= viscircles(center,radius,'linewidth',0.2,'color','g');
             plot(profile_line_x,profile_line_y,'m')
             title('Gr imfind V. regions')
             hold off 

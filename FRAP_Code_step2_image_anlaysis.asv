@@ -10,8 +10,8 @@
 % - account for reference region breaching edges
 % - comment and clean up entire code
 % - create function that loads an image given the folders, and frame#, etc?
+% - do we need im0 in fits?
 % - speed up the code somehow
-% - find a way to just have an empty entry when no circle is found
 
 % - add data structure to input if there was drift or no
 % - look up what the laser focus knob is actually doing
@@ -105,6 +105,7 @@ tic; % timing
 disp(["First Circles found in " + string(round(toc)) + " s."])
 % [id,fits,fig,stats] = fun_radius_finder_i(id,fits,save_im,1000*[1.1733 0.9340],0.9,60);
 %% Reading in the rest of the frap data 
+tic 
 
 % [alldata] = fun_frap_frames(id,fits,alldata);
 
@@ -112,19 +113,19 @@ disp(["First Circles found in " + string(round(toc)) + " s."])
 for field = fieldnames(id)' % iterate through the position list in id structure
 %     field = fieldnames(id)';
     tic
-    position = field{1};
+    position = field{1}
     folder3 = 'frap';
 
     % make one figure that will be updated at every 10th timepoint just to
     % watch it run
-    fig2 = figure('name',position,'visible','on');
-    set(fig2, 'WindowStyle', 'Docked');  %figure will dock instead of free float
+    fig = figure('name',position,'visible','on');
+    set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float
     
     % Make a list of each image name in our position folder
     list = dir(fullfile(boxfolder,folder1,folder2,folder3,position,'*.tif')); % lists all files with .tif ending in the position folder
     data = rmfield(list,{'bytes','date','isdir','datenum'});  % cleaning up the data structure
     n_images = length(list);
-    
+  
     % iterate through the images in data structure
     for t = 1:n_images 
         try
@@ -188,6 +189,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     disp([position, 'loaded in ' + string(round(toc)) + " s."])
 end
 %% testing boundaries of image masking
+close all
 
     fields = fieldnames(id)';
     position = field{1};
