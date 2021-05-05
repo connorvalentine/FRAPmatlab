@@ -38,7 +38,7 @@ function [circle_mask,reference_mask,center,ref_i,I_ti,ref_0_i,drift_flag] = fun
 
     if height(stats2) == 0 | stats2(main_idx,:).distance > 200
         center = previous_center_coords; % center is the middle of the image
-        disp('center moved too far from previous frame, skipping to next')
+        disp('center moved too far from previous frame')
         disp(t)
         disp(stats2(main_idx,:))
     else

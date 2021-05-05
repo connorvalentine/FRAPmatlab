@@ -139,7 +139,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             time_i = data(t).r_time;
             time_i  = datevec(time_i);
             dt = etime(time_i,time1); % calculate elapsed time from the first image in seconds
-            
+            data(t).('dt') = dt; %save to data structure
 
             % calculate pixel intensity information
             f1 = fullfile(data(t).folder,data(t).name);
@@ -179,7 +179,6 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             normalized_i = (I_ti./fits.(position).I_t0).*(norm_ratio); 
 
             % adding to data structure
-            data(t).('dt') = dt; %save to data structure
             data(t).('I_ti') = I_ti;
             data(t).('ref_i') = ref_i;
             data(t).('ref_ratio') = norm_ratio;
@@ -187,7 +186,6 @@ for field = fieldnames(id)' % iterate through the position list in id structure
         catch e
             warning('werid thing happened ')
             fprintf(1,'There was an error! The message was:\n%s',e.message);
-            data(t).('dt') = dt; %save to data structure
             data(t).('I_ti') = data(t-1).I_ti;
             data(t).('ref_i') = data(t-1).ref_i;
             data(t).('ref_ratio') = data(t-1).ref_ratio;
@@ -202,17 +200,17 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     disp([position, 'loaded in ' + string(round(toc)) + " s."])
 end
 %% fixing alldata to only have values up to t if drift flag is triggered
-% for field = fieldnames(id)' % iterate through the position list in id structure
-%     tic
-%     position = field{1};
-%     data = alldata.(position);
-%     if length([data.IN_ti]) <100
-%         disp(position)
-%         disp(length([data.IN_ti]))
-%         disp(length([data.dt]))
-%     else 
-%     end
-% end
+for field = fieldnames(id)' % iterate through the position list in id structure
+    tic
+    position = field{1};
+    data = alldata.(position);
+    if length([data.IN_ti]) <100
+        disp(position)
+        disp(length([data.IN_ti]))
+        disp(length([data.dt]))
+    else 
+    end
+end
 
 %% testing boundaries of image masking
 % 
@@ -329,13 +327,11 @@ for field = fieldnames(alldata)'
     
     % plotting data from image intensities, without the fits 
     t = [alldata.(position).dt]';
-    
+    t = t(2:end);
     I = [alldata.(position).I_ti]';
     I = I(2:end);
     IN = [alldata.(position).IN_ti]';
-    t = t(2:length(IN)); % delete later
     IN = IN(2:end);
-    
     ref_ratio = [alldata.(position).ref_ratio]';
     ref_ratio = ref_ratio(2:end);
     Ifitparam = fits.(position).('Ifitparam');

@@ -199,7 +199,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     fits.(position).('I_t1') = I_t1;
     fits.(position).('ref_1') = ref_1;
     fits.(position).('radius') = FWHM/2;
-    fits.(position).('err_radius') = FWHM_err;
+    fits.(position).('err_radius') = FWHM_err/2;
     
     if counter == npoints
         counter = 0;
