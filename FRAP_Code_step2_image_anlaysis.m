@@ -104,7 +104,7 @@ disp(["Data loaded in " + string(round(toc)) + " s."])
 %% Performing fits of the normalized data Cheng style
 tic 
 
-[fits] = fun_intensity_fits(fits,alldata);
+[fits] = fun_intensity_fits_nofm(fits,alldata);
 
 disp(["all data fit in " + string(round(toc)) + " s."])
 %%
@@ -115,19 +115,34 @@ pd = struct(); %plot data structure
 for field = fieldnames(id)'
     position = field{1};
     i = i+1;
-    pd.('r')(i) = fits.(position).FWHM .* 0.5 .*fits.(position).pixel_size;
-    pd.('rlb')(i) = (fits.(position).FWHM - fits.(position).dFWHM(1)).* 0.5 .*fits.(position).pixel_size;
-    pd.('rub')(i) = (fits.(position).dFWHM(2) - fits.(position).FWHM).* 0.5 .*fits.(position).pixel_size;
-    pd.('c')(i) = id.(position).plwt;
-    pd.('D')(i) = fits.(position).D/55.1; % from cheng to normalize by free soln BSA D
-    pd.('Dneg')(i) = fits.(position).errD(1)/55.1;
-    pd.('Dpos')(i) = fits.(position).errD(2)/55.1;
-    pd.('fm0')(i) = fits.(position).fm0;   
-    pd.('fm')(i) = fits.(position).fit_info.f;
-    pd.('fmlb')(i) = fits.(position).fit_info.f - fits.(position).ci(1,1); 
-    pd.('fmub')(i) =  fits.(position).ci(2,1) - fits.(position).fit_info.f;
+    if fits.(position).GoodFit == 'y'
+        pd.('r')(i) = fits.(position).radius .*fits.(position).pixel_size;
+        pd.('rlb')(i) = (fits.(position).radius - fits.(position).err_radius(1)).*fits.(position).pixel_size;
+        pd.('rub')(i) = (fits.(position).err_radius(2) - fits.(position).radius).*fits.(position).pixel_size;
+        pd.('c')(i) = id.(position).plwt;
+        pd.('D')(i) = fits.(position).D/55.1; % from cheng to normalize by free soln BSA D
+        pd.('Dneg')(i) = fits.(position).errD(1)/55.1;
+        pd.('Dpos')(i) = fits.(position).errD(2)/55.1;
+        pd.('fm0')(i) = fits.(position).fm0;   
+        pd.('fm')(i) = fits.(position).fm0; 
+        pd.('fmlb')(i) = fits.(position).('fm0err');
+        pd.('fmub')(i) =  fits.(position).('fm0err');
+    else
+        % now we make those elements empty
+        pd.('r')(i) = 0;
+        pd.('rlb')(i) = 0;
+        pd.('rub')(i) = 0;
+        pd.('c')(i) = id.(position).plwt;
+        pd.('D')(i) = 0;
+        pd.('Dneg')(i) = 0;
+        pd.('Dpos')(i) = 0;
+        pd.('fm0')(i) = fits.(position).fm0;  
+        pd.('fm')(i) = 0;
+        pd.('fmlb')(i) = fits.(position).('fm0err');
+        pd.('fmub')(i) = fits.(position).('fm0err');
+    end
 end
-
+%
 % plotting the analyzed data 
 C = jet;
 counter = 0;

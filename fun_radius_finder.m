@@ -170,14 +170,8 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     
     % find the mean value of the pixels in this circle
     % add peak info to the fits 
-    fits.(position).('FWHM') = FWHM;
-    fits.(position).('dFWHM') = FWHM_err;
-    fits.(position).('peak_height') = peak_height;
-    fits.(position).('peak_center') = peak_center;
-    fits.(position).('profile0') = profile0;
-    fits.(position).('profile1') = profile1;
-    fits.(position).('profile_line_x') = profile_line_x;
-    fits.(position).('profile_line_y') = profile_line_y;
+    fits.(position).('radius') = FWHM/2;
+    fits.(position).('err_radius') = FWHM_err/2;
     fits.(position).('circle_mask') = circle_mask;
     fits.(position).('reference_mask') = reference_mask;
     fits.(position).('I_t0') = I_t0;
