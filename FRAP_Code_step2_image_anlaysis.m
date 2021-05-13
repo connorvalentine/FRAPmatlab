@@ -1,25 +1,9 @@
 % FRAP analysis V1 
 % Connor Valentine
-%% to do list
-%%%%%%%%%%% urgent
-% - good idea to save another matlab structure that eliminates certain
-% positions from being plotted when importing into the analysis main filer
+%% this version 
 
-% - move experiments off of this hard-drive 
-% - look up what the laser focus knob is actually doing
-
-%%%%%%%%%%% primary
-% - is photobleaching a permanent phenomena? irreversible?
-% - why is radius so different than cheng??
-% - cap fm off at one for the fits?
-
-%%%%%%%%%%% Experiments to run %%%%%%%%%%%%%%%%%%%%%
-% - energy balance on laser to make sure it isnt heating up
-
-%%%%%%%%%%% Diffusivity fitting %%%%%%%%%%%%%%%%%%%%%5
-% - other models for FRAP and normalization?
-% - apply Ionic hopping mechanism model to frap data to see if that is a
-% good metric?
+% this is to analyze diffusion of BSA in solution -> much faster, exposure
+% is ~ every 200 ms for about one minute.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5%
 %% Part 1: Initialize some basic parameters and defaults
@@ -54,7 +38,7 @@
 
 global folder1 folder2
     folder1 = 'z_BSA_in_Free_Solution';
-    folder2 = '25C';
+    folder2 = '55C';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
@@ -66,7 +50,7 @@ trouble = 'n';
 
 % do you want to make movies? (yes is first time analyzing)
 global makemovies npoints
-makemovies = 'y';
+makemovies = 'n';
 
 % number of points per wt%. is usually 3 now.
 npoints = 3;
@@ -74,9 +58,9 @@ npoints = 3;
 % Initialize Data Folder, structures, and sample ID data
 global boxfolder outputfolder plotfolder datafolder
     boxfolder = 'C:\Users\user\Box\Sorted Data FRAP\Sorted Data';
-    datafolder = fullfile(boxfolder,folder1,folder2); % full path where outputs structures will be saved
-    outputfolder = fullfile(boxfolder,'z_outputs');
-    plotfolder = fullfile(boxfolder,'z_outputs','z_plots'); % plot folder within the data folder for the defined experiment
+    datafolder = fullfile(boxfolder,folder1,folder2); % full path where the data is
+    outputfolder = fullfile(boxfolder,'z_BSA_in_Free_Solution');
+    plotfolder = fullfile(boxfolder,'z_BSA_in_Free_Solution','plots'); % plot folder within the data folder for the defined experiment
     
 %initialize the structures to store all data in 
 alldata = struct();
@@ -104,10 +88,11 @@ disp(["Data loaded in " + string(round(toc)) + " s."])
 %% Performing fits of the normalized data Cheng style
 tic 
 
-[fits] = fun_intensity_fits(fits,alldata);
+[fits] = fun_intensity_fits_nofm(fits,alldata);
 
+%
 disp(["all data fit in " + string(round(toc)) + " s."])
-%%
+%
 % adding variables to id that can be useful for plotting 
 % need for loop to unpack
 i = 0;
@@ -115,18 +100,17 @@ pd = struct(); %plot data structure
 for field = fieldnames(id)'
     position = field{1};
     i = i+1;
-    pd.('r')(i) = fits.(position).FWHM .* 0.5 .*fits.(position).pixel_size;
-    pd.('rlb')(i) = (fits.(position).FWHM - fits.(position).dFWHM(1)).* 0.5 .*fits.(position).pixel_size;
-    pd.('rub')(i) = (fits.(position).dFWHM(2) - fits.(position).FWHM).* 0.5 .*fits.(position).pixel_size;
+    pd.('r')(i) = fits.(position).radius.* 0.5 .*fits.(position).pixel_size;
+    pd.('rlb')(i) = (fits.(position).radius - fits.(position).err_radius(1)).* 0.5 .*fits.(position).pixel_size;
+    pd.('rub')(i) = (fits.(position).err_radius(2) - fits.(position).radius).* 0.5 .*fits.(position).pixel_size;
     a = id.Pos0.temp;
-    pd.('c')(i) = str2num(a(1:2))
+    pd.('c')(i) = str2num(a(1:2));
     pd.('D')(i) = fits.(position).D/55.1; % from cheng to normalize by free soln BSA D
     pd.('Dneg')(i) = fits.(position).errD(1)/55.1;
     pd.('Dpos')(i) = fits.(position).errD(2)/55.1;
     pd.('fm0')(i) = fits.(position).fm0;   
-    pd.('fm')(i) = fits.(position).fit_info.f;
-    pd.('fmlb')(i) = fits.(position).fit_info.f - fits.(position).ci(1,1); 
-    pd.('fmub')(i) =  fits.(position).ci(2,1) - fits.(position).fit_info.f;
+    pd.('fmlb')(i) = fits.(position).('fm0err');
+    pd.('fmub')(i) =  fits.(position).('fm0err');
 end
 
 % plotting the analyzed data 
@@ -169,6 +153,8 @@ for field = fieldnames(alldata)'
     shapec = fits.(position).shapec;
     fill(xc',shapec,'r','FaceAlpha',0.1,'LineStyle','--','linewidth',1);
     plot([0,t_fit(end)],[Ifitparam,Ifitparam])
+    y_fm = Ifitparam + (1-Ifitparam)*fits.(position).fm0;
+    plot([0,t_fit(end)],[y_fm ,y_fm ])
     else 
     end
     title(position);
@@ -218,7 +204,7 @@ subplot(1,3,2)
 subplot(1,3,3)
     hold on
 %     plot(pd.c,pd.fm,'om')
-    errorbar(pd.c,pd.fm,pd.fmlb,pd.fmub,'om')
+    errorbar(pd.c,pd.fm0,pd.fmlb,pd.fmub,'om')
     xlabel('temperature')
     ylabel('mobile fraction [fm]')
     axis([20 60 0.5 1.2])

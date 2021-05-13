@@ -52,8 +52,8 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     fits.(position).('objects_in_image') = stats;        % the main object is the most solid one usually
     
     lim1 = 50; % minimum pixel radius to look for on most solid droplet 
-    if height(stats) == 0 | stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1  
-        fits.(position).('center') = 1024; % center is the middle of the image
+    if height(stats) == 0 || stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1  
+        fits.(position).('center') = [1024,1024]; % center is the middle of the image
         fits.(position).('radius') = 10;% radius set to 10 pixels (too small to be a real object)
     else
         main_idx = find(stats.Solidity == max(stats.Solidity));
@@ -170,18 +170,13 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     
     % find the mean value of the pixels in this circle
     % add peak info to the fits 
-    fits.(position).('FWHM') = FWHM;
-    fits.(position).('dFWHM') = FWHM_err;
-    fits.(position).('peak_height') = peak_height;
-    fits.(position).('peak_center') = peak_center;
-    fits.(position).('profile0') = profile0;
-    fits.(position).('profile1') = profile1;
-    fits.(position).('profile_line_x') = profile_line_x;
-    fits.(position).('profile_line_y') = profile_line_y;
+
     fits.(position).('circle_mask') = circle_mask;
     fits.(position).('reference_mask') = reference_mask;
     fits.(position).('I_t0') = I_t0;
     fits.(position).('ref_0') = ref_0;
+    fits.(position).('radius') = FWHM/2;
+    fits.(position).('err_radius') = FWHM_err/2;
     
     if counter == npoints
         counter = 0;
