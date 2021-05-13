@@ -205,21 +205,21 @@ subplot(1,3,1)
     hold all
     errorbar(pd.c,pd.D,pd.Dneg,pd.Dpos,'db')
     axis([20 60 0.7*min(pd.D) 2*max(pd.D)])
-    xlabel('temperature')
+    xlabel('temperature)
     ylabel('D/D_0 [\mum^2s^{-1}]')
 
 subplot(1,3,2)
     hold on
     errorbar(pd.c,pd.r,pd.rlb,pd.rub,'or')
     axis([20 60 0.8*min(pd.r) 1.2*max(pd.r)])
-    xlabel('temperature')
+    xlabel([id.(position).plur,' wt%'])
     ylabel('laser radius [um]')
     
 subplot(1,3,3)
     hold on
 %     plot(pd.c,pd.fm,'om')
     errorbar(pd.c,pd.fm,pd.fmlb,pd.fmub,'om')
-    xlabel('temperature')
+    xlabel([id.(position).plur,' wt%'])
     ylabel('mobile fraction [fm]')
     axis([20 60 0.5 1.2])
 else
