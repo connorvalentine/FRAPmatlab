@@ -65,8 +65,8 @@
 %               frap folder must be named 'frap'
 
 global folder1 folder2
-    folder1 = 'P123_BSA_55C';
-    folder2 = 'trial_6';
+    folder1 = 'z_BSA_in_Free_Solution';
+    folder2 = '25C';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
@@ -86,9 +86,9 @@ npoints = 3;
 % Initialize Data Folder, structures, and sample ID data
 global boxfolder outputfolder plotfolder datafolder
     boxfolder = 'C:\Users\user\Box\Sorted Data FRAP\Sorted Data';
-    datafolder = fullfile(boxfolder,folder1,folder2); % full path where outputs structures will be saved
-    outputfolder = fullfile(boxfolder,'z_outputs');
-    plotfolder = fullfile(boxfolder,'z_outputs','z_plots'); % plot folder within the data folder for the defined experiment
+    datafolder = fullfile(boxfolder,folder1,folder2); % full path where the data is
+    outputfolder = fullfile(boxfolder,'z_BSA_in_Free_Solution');
+    plotfolder = fullfile(boxfolder,'z_BSA_in_Free_Solution','plots'); % plot folder within the data folder for the defined experiment
     
 %initialize the structures to store all data in 
 alldata = struct();
@@ -151,8 +151,9 @@ for field = fieldnames(id)' % iterate through the position list in id structure
                 ref_i = fits.(position).ref_1;
                 I_ti = fits.(position).I_t1;
             else 
-                [circle_mask, reference_mask,center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center,previous_norm_ratio,t);
-                previous_center = center;
+                %circle_mask, reference_mask,center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center,previous_norm_ratio,t);
+                previous_center = fits.(position).center;
+                
                 
                 if drift_flag == 1
                     disp('center has drifted too close to edge of frame')
@@ -310,7 +311,7 @@ for field = fieldnames(id)'
     end
 end
 %
-close all
+
 % plotting the analyzed data 
 C = jet;
 counter = 0;
