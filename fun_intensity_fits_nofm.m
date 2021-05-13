@@ -29,8 +29,12 @@ for field = fieldnames(alldata)'
         
         norm_i = [alldata.(position).IN_ti]';
         norm_i = norm_i(ind:end);
-        fm0 = (mean(norm_i(5:end))-norm_i(1))/(1-norm_i(1));
-        
+        fm_ind = length(norm_i)-4; % 
+        fm0 = (mean(norm_i(fm_ind:end))-norm_i(1))/(1-norm_i(1)); % 
+        fm0err = std(norm_i(fm_ind:end)); % 
+%         fm_ind = find(norm_i == max(norm_i)); % version 2   % 55C P123
+%         fm0 = (mean(norm_i(fm_ind-3:fm_ind))-norm_i(1))/(1-norm_i(1)); % 55C P123
+%         fm0err = std(norm_i(fm_ind-3:fm_ind)); % 55C P123
         if fm0 > 1
             fm0 = 1;
         else
@@ -38,13 +42,11 @@ for field = fieldnames(alldata)'
         
         
         % remove any bad frames where normalized intensity is not a number
-        NANind = find(isnan(norm_i))
+        NANind = find(isnan(norm_i));
         norm_i(NANind) = [];
         x(NANind) = [];
         
-        % fit weights
-        weights = ones(length(norm_i),1);
-        weights(1: 40) = 100;
+
         % fake time data to put into the fit equation
         t_fit = linspace(0,x(end),500)'; 
 
@@ -65,18 +67,25 @@ for field = fieldnames(alldata)'
 %             options.Algorithm = 'Levenberg-Marquardt';
 %             options.Robust = 'on';  
 %             options.Weights = weights;
-            
+        % fit weights
+        weights = ones(length(norm_i),1);
+        weights(1: 50) = 5;
 
         k0 = 1.4;
         tau0 = 0.5;
         ft  = fittype('fun_FRAPfit_nofm(x,k,tau_n)');
             options = fitoptions(ft);
             options.StartPoint = [k0, tau0];
-            options.Lower =      [0.5,0.06];
-            options.Upper =      [10,100];
+            options.Lower =      [0.8,0.01]; % 55C P123
+            options.Upper =      [10,100]; % 55C
+%             options.Lower =      [0.8,0.06]; % 55C F127 and F87
+%             options.Upper =      [10,100]; % 55C
+%            options.Lower =      [0.5,1]; % 45C
+%             options.Upper =      [10,100];%  45C
             options.DiffMinChange = 0.001;
             options.TolFun = 1e-8;
             options.Robust = 'off';  
+            options.Weights = weights;
 
 
         % perform the fit to the data
@@ -135,7 +144,23 @@ for field = fieldnames(alldata)'
         fits.(position).('Ifitparam') = Ifitparam;
         fits.(position).('fm0') = fm0;
         fits.(position).('fm') = fm0;
-        fits.(position).('GoodFit') = 'y';
+        fits.(position).('fm0err') = fm0err;
+        
+        if t_fit(end)<30000
+            fits.(position).('fit_info') = [];
+            fits.(position).('ci') = [];
+            fits.(position).('D') = [];
+            fits.(position).('errD') = [];
+            fits.(position).('gof') = [];
+            fits.(position).('I_fit') = [];
+            fits.(position).('t_fit') = t_fit;
+            fits.(position).('xc') = [];
+            fits.(position).('shapec') = []; 
+            fits.(position).('GoodFit') = 'n';
+            disp('fit was bad')
+        else
+            fits.(position).('GoodFit') = 'y';
+        end
          % output values from fit 
         disp(["f= " + fm0 + ",k= "+string(f.k)+",tau= "+string(1000*f.tau_n)]);
         disp(ci)
@@ -153,6 +178,7 @@ for field = fieldnames(alldata)'
         fits.(position).('shapec') = []; 
         fits.(position).('Ifitparam') = Ifitparam;
         fits.(position).('fm0') = fm0;
+        fits.(position).('fm0err') = fm0err;
         fits.(position).('GoodFit') = 'n';
     end
 end

@@ -65,12 +65,12 @@
 %               frap folder must be named 'frap'
 
 global folder1 folder2
-    folder1 = 'F87_BSA_55C';
+    folder1 = 'P123_BSA_55C';
     folder2 = 'trial_6';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
-save_im = 'n'; 
+save_im = 'y'; 
 
 % Part 3: Are you troubleshooting the fits? 
 % Note:         Select 'y' or 'n'
@@ -262,7 +262,7 @@ tic
 
 
 disp(["all data fit in " + string(round(toc)) + " s."])
-%%
+%
 % adding variables to id that can be useful for plotting 
 % need for loop to unpack
 i = 0;
@@ -280,33 +280,33 @@ for field = fieldnames(id)'
         pd.('Dpos')(i) = fits.(position).errD(2)/55.1;
         pd.('fm0')(i) = fits.(position).fm0;   
         pd.('fm')(i) = fits.(position).fm0; 
-        pd.('fmlb')(i) = 0.1* fits.(position).fm0; 
-        pd.('fmub')(i) =  0.1* fits.(position).fm0;
+        pd.('fmlb')(i) = fits.(position).('fm0err');
+        pd.('fmub')(i) =  fits.(position).('fm0err');
     else
-        pd.('r')(i) = 1;
-        pd.('r')(i) = 1;
-        pd.('rlb')(i) = 1;
-        pd.('rub')(i) = 1;
-        pd.('c')(i) = id.(position).plwt;
-        pd.('D')(i) = 1;
-        pd.('Dneg')(i) = 1;
-        pd.('Dpos')(i) = 1;
-        pd.('fm0')(i) = 1;
-        pd.('fm')(i) = 1;
-        pd.('fmlb')(i) = 1;
-        pd.('fmub')(i) = 1;
+%         pd.('r')(i) = 1;
+%         pd.('r')(i) = 1;
+%         pd.('rlb')(i) = 1;
+%         pd.('rub')(i) = 1;
+%         pd.('c')(i) = id.(position).plwt;
+%         pd.('D')(i) = 1;
+%         pd.('Dneg')(i) = 1;
+%         pd.('Dpos')(i) = 1;
+%         pd.('fm0')(i) = fits.(position).fm0;  
+%         pd.('fm')(i) = fits.(position).fm0; 
+%         pd.('fmlb')(i) = fits.(position).('fm0err');
+%         pd.('fmub')(i) = fits.(position).('fm0err');
         % now we make those elements empty
-        pd.('r')(i) = [];
-        pd.('rlb')(i) = [];
-        pd.('rub')(i) = [];
+        pd.('r')(i) = 0;
+        pd.('rlb')(i) = 0;
+        pd.('rub')(i) = 0;
         pd.('c')(i) = id.(position).plwt;
-        pd.('D')(i) = [];
-        pd.('Dneg')(i) = [];
-        pd.('Dpos')(i) = [];
-        pd.('fm0')(i) = [];
-        pd.('fm')(i) = [];
-        pd.('fmlb')(i) = [];
-        pd.('fmub')(i) = [];
+        pd.('D')(i) = 0;
+        pd.('Dneg')(i) = 0;
+        pd.('Dpos')(i) = 0;
+        pd.('fm0')(i) = fits.(position).fm0;  
+        pd.('fm')(i) = 0;
+        pd.('fmlb')(i) = fits.(position).('fm0err');
+        pd.('fmub')(i) = fits.(position).('fm0err');
     end
 end
 %
@@ -423,7 +423,9 @@ if save_im == 'y'
         print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
 else    
 end
-%% Exporting the data structures for future use.
+
+%
+% Exporting the data structures for future use.
 % can also save individual fields if we want to get crazy
 struct_name = [folder1,'_',folder2]; % specify file name prefix
 cd(outputfolder);% first cd to output folder (where we want to save the data)
@@ -438,6 +440,6 @@ id_name = [struct_name,'_','pd','.mat']; % save pd struct (plot data)
 save(id_name,'pd');
 
 cd(mainfolder);% cd back to main folder
-%% complete
+% complete
 disp('Analysis Complete')
 

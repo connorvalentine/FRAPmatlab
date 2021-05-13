@@ -10,6 +10,7 @@ for topfield = fieldnames(data)'
     pluronic = topfield{1};
     
     pd = data.(pluronic);
+    disp(pd.D)
     pd_av = pd;
     
     % find the temperature 
@@ -23,20 +24,25 @@ for topfield = fieldnames(data)'
     
     % find the mean of each number here
     for fields = fieldnames(pd)'
+        
         meand = [];
         stdd = [];
         field = fields{1};
+        disp(field)
         data_to_average = pd.(field);
         for i = 1:length(C)
+            % average all the values for the concentration, but use find to
+            % ignore entries == 0
             temp = data_to_average(find(ic ==i));
-            meand(i) = mean(temp);
-            stdd(i) = std(temp);
+            meand(i) = mean(temp(find(temp)));
+            stdd(i) = std(temp(find(temp)));
             nums = temp;
         end
         
         % propagate uncertainty from the averaging of D as well.
         if strcmp(field,'D') 
             D_std = stdd; % standard dev from the mean in D
+            disp(meand)
         else 
         end
         
@@ -44,6 +50,7 @@ for topfield = fieldnames(data)'
             meand = sqrt((D_std.^2) + (meand.^2));            
         else
         end
+        
         pd_av.(field) = meand;
     end 
     av.(char(temperature)).(pluronic) = pd_av;
