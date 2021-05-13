@@ -1,4 +1,4 @@
-function [alldata] = fun_frap_frames(id,fits,alldata)
+function [alldata] = fun_frap_frames_with_drift_tracking(id,fits,alldata)
 global boxfolder folder1 folder2 makemovies plotfolder npoints
 folder3 = 'frap';
 counter = 0;

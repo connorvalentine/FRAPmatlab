@@ -6,7 +6,7 @@
 %% inputs and outputs
 % inputs: id structure and fits structure. Save_im is 'y' or 'no'
 
-function [struct_out1,struct_out2,fig_out,stats] = fun_radius_finder(id,fits,save_im)
+function [struct_out1,struct_out2,fig_out,stats] = fun_radius_finder_0(id,fits,save_im)
 % define the global variables
 global boxfolder folder1 folder2 plotfolder npoints
 
@@ -21,6 +21,9 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     f1 = fullfile(data(1).folder,data(1).name); % loads the pre-bleach image
     im0 = imread(f1);    
     im0sm = imgaussfilt(im0,2); % smoothed prebleach image
+    im0sm2 = imgaussfilt(im0,69);
+    fits.(position).('im0sm2') = im0sm; % add info to fits.
+    fits.(position).('im0sm') = im0sm; % add info to fits.
     fits.(position).('im0') = im0; % add info to fits.
     
     % Second we load the first image after bleaching
@@ -31,12 +34,10 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     im1 = imread(f1);
     fits.(position).('im1') = im1;
     im1sm = imgaussfilt(im1,2); % now smooth image
+    fits.(position).('im1sm') = im1sm;
     
     imTEST = 10000*(1- im1sm./im0sm); % because each image is an int, the imTest is all int, rounded to either 0 or 10,000
-    imlbtest = min(imTEST(:));
-    imubtest = mean2(imTEST);
-    imlb = min(im1(:));
-    imub = mean2(im1);
+
      % First we do some pre-analysis on the images 
     T = graythresh(imTEST); 
     bw1 = im2bw(imTEST,T); % old way to do it seems to work better
@@ -56,7 +57,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     % now we iterate through the ojects found and choose the best one. This
     % could be improved some what I think
     lim1 = 10; % minimum pixel radius to look for on most solid droplet 
-    if height(stats) == 0 | stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1  
+    if height(stats) == 0 || stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1  
         fits.(position).('center') = [1024,1024]; % center is the middle of the image
         fits.(position).('radius') = 10;% radius set to 10 pixels (too small to be a real object)
     else
@@ -79,7 +80,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     % for the center of the droplet.
     lim1 = 10; % minimum pixel radius to look for on most solid droplet 
     stats = fits.(position).objects_in_image;
-    if height(stats) == 0 | stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1
+    if height(stats) == 0 || stats.EquivDiameter(find(stats.Solidity == max(stats.Solidity)))/2 < lim1
         if height(stats) == 0
             disp(['no droplets found', position])
         else
@@ -91,7 +92,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             temp_pos = temp_pos_list{i};
             temp_stats = fits.(temp_pos).objects_in_image;
             
-            if height(temp_stats) == 0 | temp_stats.EquivDiameter(find(temp_stats.Solidity == max(temp_stats.Solidity)))/2 < lim1
+            if height(temp_stats) == 0 || temp_stats.EquivDiameter(find(temp_stats.Solidity == max(temp_stats.Solidity)))/2 < lim1
                 continue
             else 
                 main_idx = find(temp_stats.Solidity == max(temp_stats.Solidity));
@@ -113,12 +114,9 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     
     % import the data for this test
     im0 = fits.(position).im0;
-    im0sm = imgaussfilt(im0,2); % smoothed prebleach image
+    im0sm =  fits.(position).im0sm;
     im1 = fits.(position).im1;
-    im1sm = imgaussfilt(im1,2); % smoothed prebleach image
-%     imTEST = 10000*(1- im1sm./im0sm); % because each image is an int, the imTest is all int, rounded to either 0 or 10,000
-%     imlbtest = min(imTEST(:));
-%     imubtest = mean2(imTEST);
+    im1sm = fits.(position).im1sm;
     imlb = min(im1(:));
     imub = max(im1(:));
     
@@ -179,24 +177,30 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     % masking image 1 just for the plot
     masked_image1 = im1; % Initialize with the entire image.
 	masked_image1(~circle_mask) = 0; % Zero image outside the circle mask.
+    I_t1 = mean(masked_image1(masked_image1 > 0));
+    
     masked_reference_image1 = im1;
     masked_reference_image1(~ reference_mask) = 0;    
-    
+    ref_1 = mean(masked_reference_image1(masked_reference_image1 > 0));
     % find the mean value of the pixels in this circle
     % add peak info to the fits 
-    fits.(position).('FWHM') = FWHM;
-    fits.(position).('dFWHM') = FWHM_err;
-    fits.(position).('peak_height') = peak_height;
-    fits.(position).('peak_center') = peak_center;
-    fits.(position).('profile0') = profile0;
-    fits.(position).('profile1') = profile1;
-    fits.(position).('profile_line_x') = profile_line_x;
-    fits.(position).('profile_line_y') = profile_line_y;
+%     fits.(position).('FWHM') = FWHM;
+%     fits.(position).('dFWHM') = FWHM_err;
+%     fits.(position).('peak_height') = peak_height;
+%     fits.(position).('peak_center') = peak_center;
+%     fits.(position).('profile0') = profile0;
+%     fits.(position).('profile1') = profile1;
+%     fits.(position).('profile_line_x') = profile_line_x;
+%     fits.(position).('profile_line_y') = profile_line_y;
     fits.(position).('circle_mask') = circle_mask;
     fits.(position).('reference_mask') = reference_mask;
     fits.(position).('I_t0') = I_t0;
     fits.(position).('ref_0') = ref_0;
-
+    fits.(position).('I_t1') = I_t1;
+    fits.(position).('ref_1') = ref_1;
+    fits.(position).('radius') = FWHM/2;
+    fits.(position).('err_radius') = FWHM_err/2;
+    
     if counter == npoints
         counter = 0;
     else
