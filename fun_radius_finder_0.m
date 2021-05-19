@@ -21,9 +21,8 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     f1 = fullfile(data(1).folder,data(1).name); % loads the pre-bleach image
     im0 = imread(f1);    
     im0sm = imgaussfilt(im0,2); % smoothed prebleach image
-    im0sm2 = imgaussfilt(im0,69);
-    fits.(position).('im0sm2') = im0sm; % add info to fits.
     fits.(position).('im0sm') = im0sm; % add info to fits.
+    fits.(position).('im0sm2') = imgaussfilt(im0,69);
     fits.(position).('im0') = im0; % add info to fits.
     
     % Second we load the first image after bleaching
@@ -182,16 +181,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     masked_reference_image1 = im1;
     masked_reference_image1(~ reference_mask) = 0;    
     ref_1 = mean(masked_reference_image1(masked_reference_image1 > 0));
-    % find the mean value of the pixels in this circle
-    % add peak info to the fits 
-%     fits.(position).('FWHM') = FWHM;
-%     fits.(position).('dFWHM') = FWHM_err;
-%     fits.(position).('peak_height') = peak_height;
-%     fits.(position).('peak_center') = peak_center;
-%     fits.(position).('profile0') = profile0;
-%     fits.(position).('profile1') = profile1;
-%     fits.(position).('profile_line_x') = profile_line_x;
-%     fits.(position).('profile_line_y') = profile_line_y;
+
     fits.(position).('circle_mask') = circle_mask;
     fits.(position).('reference_mask') = reference_mask;
     fits.(position).('I_t0') = I_t0;

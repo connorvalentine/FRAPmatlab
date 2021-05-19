@@ -1,7 +1,7 @@
 %% inputs and outputs
 % inputs: id structure and fits structure. Save_im is 'y' or 'no'
 % need to import position as well
-function [circle_mask,reference_mask,center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center_coords,previous_norm_ratio,t)
+function [center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center_coords,previous_norm_ratio,t)
     drift_flag = 0;
     im0 = fits.(position).im0;
     im0sm = fits.(position).im0sm2;
@@ -44,11 +44,6 @@ function [circle_mask,reference_mask,center,ref_i,I_ti,ref_0_i,drift_flag] = fun
     else
         center = stats2.Centroid(main_idx,:);
     end
-    
-%     disp('stats')
-%     disp(stats)
-%     disp(main_idx)
-%     disp(stats2)
     
     % make a circle mask defined by the FWHM of the bleached area
     circleCenterX = center(1);
