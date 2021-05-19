@@ -42,7 +42,7 @@
     
     av = struct(); % averaged data structure
     all = struct(); % all data we want to plot maybe
-    save_im = 'n';
+    save_im = 'y';
 %% cheng comparison data
 F127c = [7;10;12;15;17.5;20;23;25;27];
 F127d = [0.2;0.1;0.08;0.04;0.025;0.012;0.009;0.006;0.003];
@@ -145,21 +145,17 @@ for topfield = fieldnames(av)'
         BSA_fields = fieldnames(avBSA.(temperature_field));
         BSA_field = BSA_fields{1};
         
-        D_temp = av.(temperature_field).(pluronic_field).D;
-        Dneg_temp = av.(temperature_field).(pluronic_field).Dneg;
-        Dpos_temp = av.(temperature_field).(pluronic_field).Dpos;
+        D_temp = av.(temperature_field).(pluronic_field).D
+        Dneg_temp = av.(temperature_field).(pluronic_field).Dneg
+        Dpos_temp = av.(temperature_field).(pluronic_field).Dpos
         
         D0 = avBSA.(temperature_field).(BSA_field).D
         Dneg0 = avBSA.(temperature_field).(BSA_field).Dneg;
         Dpos0 = avBSA.(temperature_field).(BSA_field).Dpos;
     
-        D_normalized = D_temp/D0;
-        D_normalized_neg = D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
-        D_normalized_pos = D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
+        D_normalized = D_temp/D0
+        D_normalized_neg = D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2)
         
-        av.(temperature_field).(pluronic_field).D =  D_normalized;
-        av.(temperature_field).(pluronic_field).Dneg = D_normalized_neg;
-        av.(temperature_field).(pluronic_field).Dpos =  D_normalized_pos;
     end
 end
 
@@ -180,22 +176,17 @@ for i = 1:length(fieldnames(av))
         temp = av.(field).(pluronic);
         
         subplot(2,3,k)
-            
-            
-            errorbar(temp.c,temp.D,temp.Dneg,temp.Dpos,'d','color',color,'markerfacecolor',color)
             hold on
             set(gca,'YScale','log');
-            axis([0.9*min(temp.c) 1.1*max(temp.c) 1e-5 1])
+            errorbar(temp.c,temp.D,temp.Dneg,temp.Dpos,'d','color',color,'markerfacecolor',color)
+            axis([0.9*min(temp.c) 1.1*max(temp.c) 1e-4 2])
             ylabel('D/D_0 [\mum^2s^{-1}]')
-            yticks([1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
 
         subplot(2,3,k+3)  
-            
-            plot(temp.c,temp.fm0,'o','color',color,'markerfacecolor','none','linewidth',3)
             hold on
+            plot(temp.c,temp.fm0,'o','color',color,'markerfacecolor','none','linewidth',3)
             axis([0.9*min(temp.c) 1.1*max(temp.c) 0 1 ])
             xlabel([pluronic,' wt%'])
-            yticks([1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
             ylabel('f_m')
 
     end
@@ -203,7 +194,6 @@ for i = 1:length(fieldnames(av))
     legend('D: 25C','D: 35C','D: 45C','D: 55C','location','north','orientation','horizontal','NumColumns', 2)
     subplot(2,3,5)
     legend('D: 25C','D: 35C','D: 45C','D: 55C','location','south','orientation','horizontal','NumColumns', 2)
-    box on
 end
 
 if save_im == 'y'
@@ -276,10 +266,9 @@ for i = 1:length(fieldnames(av))
                     hold on
                     set(gca,'YScale','log');
                     errorbar(temperature,temp.D(j),temp.Dneg(j),temp.Dpos(j),'d','color',color,'markerfacecolor',color)
-                    axis([20 60 1e-5 1])
+                    axis([20 60 1e-4 2])
                     xlabel([pluronic,' ',num2str(temp.c(j)),' wt%'])
                     ylabel('D/D_0')
-                    yticks([1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
             end
     end
     
