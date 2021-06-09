@@ -42,7 +42,7 @@
     
     av = struct(); % averaged data structure
     all = struct(); % all data we want to plot maybe
-    save_im = 'n';
+    save_im = 'y';
 %% cheng comparison data
 F127c = [7;10;12;15;17.5;20;23;25;27];
 F127d = [0.2;0.1;0.08;0.04;0.025;0.012;0.009;0.006;0.003];
@@ -136,9 +136,35 @@ cd(mainfolder)
 
 [av,all] = fun_data_average(data,id,av);
 
+%% importing light scattering data to use instead of the FRAP data
+% D_mean = [56.0;75.7;94.8;99.8];
+% D_err = [0.75;0.80;0.40;3.18];
+% k = 0;
+% 
+% for topfield = fieldnames(av)'
+%     k = k+1;
+%     temperature_field = topfield{1}
+%     for field = fieldnames(id)'
+%         pluronic_field = field{1}
+%         BSA_fields = fieldnames(avBSA.(temperature_field));
+%         BSA_field = BSA_fields{1};
+%         disp(BSA_field)
+%         
+%         D0 = D_mean(k)
+%         Dneg0 = D_err(k)
+%         Dpos0 = D_err(k)
+%     
+%     end
+% end
+
 %% Plotting all the data at each temperature in subplots
-%normalizing the data by the bsa in solution D0 data
+%normalizing the data by the bsa in solution D0 data. Using Light
+%scattering data for D0 in solution not the FRAP
+D_mean = [56.0;75.7;94.8;99.8];
+D_err = [0.75;0.80;0.40;3.18];
+k = 0;
 for topfield = fieldnames(av)'
+    k = k+1;
     temperature_field = topfield{1}
     for field = fieldnames(id)'
         pluronic_field = field{1}
@@ -149,10 +175,13 @@ for topfield = fieldnames(av)'
         Dneg_temp = av.(temperature_field).(pluronic_field).Dneg;
         Dpos_temp = av.(temperature_field).(pluronic_field).Dpos;
         
-        D0 = avBSA.(temperature_field).(BSA_field).D
-        Dneg0 = avBSA.(temperature_field).(BSA_field).Dneg;
-        Dpos0 = avBSA.(temperature_field).(BSA_field).Dpos;
-    
+%         D0 = avBSA.(temperature_field).(BSA_field).D
+%         Dneg0 = avBSA.(temperature_field).(BSA_field).Dneg;
+%         Dpos0 = avBSA.(temperature_field).(BSA_field).Dpos;
+        D0 = D_mean(k);
+        Dneg0 = D_err(k);
+        Dpos0 = D_err(k);
+
         D_normalized = D_temp/D0;
         D_normalized_neg = D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
         D_normalized_pos = D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
@@ -163,271 +192,374 @@ for topfield = fieldnames(av)'
     end
 end
 
-%% Plotting all temp data on one pluronic plot
-colors = parula(69);
+
+%% Plotting all temp data on separate  pluronic plot
+all_colors = parula(69);
 close all
-fig = figure(123);
-set(123, 'WindowStyle', 'Docked');
+colors(1,:) = all_colors(5,:);
+colors(2,:) = all_colors(30,:);
+colors(3,:) = all_colors(45,:);
+colors(4,:) = all_colors(60,:);
 
 for i = 1:length(fieldnames(av))
     temperatures = fieldnames(av);
     field = temperatures{i};
     temperature = str2num(field(4:5));
-    color = colors(i*15,:);
+    color = colors(i,:);
     for k = 1:3
         pluronics = fieldnames(av.(field))';
         pluronic = pluronics{k};
         temp = av.(field).(pluronic);
         
-        subplot(2,3,k)
-            
-            
-            errorbar(temp.c,temp.D,temp.Dneg,temp.Dpos,'d','color',color,'markerfacecolor',color)
+        fig = figure(k);
+        set(k, 'WindowStyle', 'Docked');
+
+        errorbar(temp.c,temp.D,temp.Dneg,temp.Dpos,'d','color',color,'markerfacecolor',color)
+        hold on
+        set(gca,'YScale','log');
+        axis([0.95*min(temp.c) 1.05*max(temp.c) 1e-6 2e-2])
+        ylabel('D/D_0 [\mum^2s^{-1}]')
+        xlabel([pluronic ,' wt%'])
+        yticks([1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
+        legend('25C','35C','45C','55C','location','southwest','orientation','vertical','NumColumns',1)
+        if save_im == 'y' && temperature == 55
+            fig.PaperUnits = 'inches';
+            fig.PaperPosition = [0 0 4.5 4];             % define location to save the images 
+            plot_name = [pluronic,'DvC'];
+            plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+            print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+        else
+        end
+    end
+ 
+ end
+% 
+
+
+%% Plotting all fm0vC data on separate  pluronic plot
+all_colors = parula(69);
+close all
+colors(1,:) = all_colors(5,:);
+colors(2,:) = all_colors(30,:);
+colors(3,:) = all_colors(45,:);
+colors(4,:) = all_colors(60,:);
+
+for i = 1:length(fieldnames(av))
+    temperatures = fieldnames(av);
+    field = temperatures{i};
+    temperature = str2num(field(4:5));
+    color = colors(i,:);
+    for k = 1:3
+        pluronics = fieldnames(av.(field))';
+        pluronic = pluronics{k};
+        temp = av.(field).(pluronic);
+        
+        fig = figure(2*k);
+        set(2*k, 'WindowStyle', 'Docked');
+        hold on
+
+        plot(temp.c,temp.fm0,'o','color',color,'markerfacecolor',color)
+        axis([0.95*min(temp.c) 1.05*max(temp.c) 0 1.05])
+        xlabel([pluronic,' wt%'])
+        ylabel('fraction of mobile proteins')
+        
+        
+        leg = legend('25C','35C','45C','55C','location','southwest','orientation','vertical','NumColumns',1)
+        leg.LineWidth = 0.5;
+        if save_im == 'y' && temperature == 55
+            fig.PaperUnits = 'inches';
+            fig.PaperPosition = [0 0 4.5 4];             % define location to save the images 
+            plot_name = [pluronic,'fm0vC'];
+            plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+            print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+        else
+        end
+    end
+ 
+ end
+%% Plotting D vs T for each concentration separate plots
+close all
+colors = jet(6);
+for i = 1:length(fieldnames(av))
+    temperatures = fieldnames(av);
+    field = temperatures{i};
+    temperature = str2num(field(4:5));
+    k = 0;
+    
+    for pluronics = fieldnames(av.(field))'
+        k = k+1;
+        fig = figure(2*k);
+        set(2*k, 'WindowStyle', 'Docked');
+        hold on
+        pluronic = pluronics{1};
+        temp = av.(field).(pluronic);
+        
+        figure(2*k);
+        for j = 1:6
             hold on
             set(gca,'YScale','log');
-            axis([0.9*min(temp.c) 1.1*max(temp.c) 1e-5 1])
-            ylabel('D/D_0 [\mum^2s^{-1}]')
-            yticks([1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
-
-        subplot(2,3,k+3)  
-            
-            plot(temp.c,temp.fm0,'o','color',color,'markerfacecolor','none','linewidth',3)
+            errorbar(temperature,temp.D(j),temp.Dneg(j),temp.Dpos(j),'d','color',colors(j,:),'markerfacecolor',colors(j,:))
+            axis([20 60 1e-6 2e-2])
+            xlabel('Temperature \circC')
+            ylabel('D/D_0')
+            yticks([1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
+        end
+        if k == 1
+            lgd = legend('25','30','35','37.5','40','42.5','location','eastoutside');
+            lgd.Title.String = 'F87 wt%';
+        elseif k == 2
+            lgd = legend('17.5','20','22.5','25','27.5','30','location','eastoutside');
+            lgd.Title.String = 'F127 wt%';
+        else
+            lgd = legend('20 ','25 ','27.5','30','32.5','35','location','eastoutside');
+            lgd.Title.String = 'P123 wt%';
+        end
+        
+        if save_im == 'y' && temperature == 55
+            fig.PaperUnits = 'inches';
+            fig.PaperPosition = [0 0 6 4];             % define location to save the images 
+            plot_name = [pluronic,'DvT'];
+            plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+            print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+        else
+        end
+    end
+    
+end
+%% Plotting fm vs T for each concentration separate plots
+close all
+colors = jet(6);
+for i = 1:length(fieldnames(av))
+    temperatures = fieldnames(av);
+    field = temperatures{i};
+    temperature = str2num(field(4:5));
+    k = 0;
+    
+    for pluronics = fieldnames(av.(field))'
+        k = k+1;
+        fig = figure(2*k);
+        set(2*k, 'WindowStyle', 'Docked');
+        hold on
+        pluronic = pluronics{1};
+        temp = av.(field).(pluronic);
+        
+        figure(2*k);
+        for j = 1:6
             hold on
-            axis([0.9*min(temp.c) 1.1*max(temp.c) 0 1 ])
-            xlabel([pluronic,' wt%'])
-            yticks([1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
+            plot(temperature,temp.fm0(j),'d','color',colors(j,:),'markerfacecolor',colors(j,:))
+            axis([20 60 0 1.1])
+            xlabel('Temperature \circC')
             ylabel('f_m')
-
-    end
-    subplot(2,3,2)
-    legend('D: 25C','D: 35C','D: 45C','D: 55C','location','north','orientation','horizontal','NumColumns', 2)
-    subplot(2,3,5)
-    legend('D: 25C','D: 35C','D: 45C','D: 55C','location','south','orientation','horizontal','NumColumns', 2)
-    box on
-end
-
-if save_im == 'y'
-    fig.PaperUnits = 'inches';
-    fig.PaperPosition = [0 0 14 6];             % define location to save the images 
-    plot_name = ['All Pluronics','DvC'];
-    plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-    print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
-else
-end
-
-%% Plotting all fm0 data on one plot (without fit
-fig = figure(12345);
-set(12345, 'WindowStyle', 'Docked');
-
-for i = 1:length(fieldnames(av))
-    temperatures = fieldnames(av); % temperature of the dataset
-    field = temperatures{i};
-    temperature = str2num(field(4:5));
-    color = colors(i*15,:);
-    k = 0;
-    for pluronics = fieldnames(av.(field))'
-        k = k+1;
-        pluronic = pluronics{1};
-        temp = av.(field).(pluronic);
-        
-        subplot(1,3,k)
-            hold on
-            plot(temp.c,temp.fm0,'d','color',color,'markerfacecolor',color)
-            axis([0.9*min(temp.c) 1.1*max(temp.c) 0.1 1.2 ])
-            xlabel([pluronic,' wt%'])
-            ylabel('fraction of mobile proteins')
-            if i ==4
-            legend('25C','35C','45C','55C','location','best','NumColumns',2)
-            else
-            end
-    end
-end
-
-if save_im == 'y'
-    fig.PaperUnits = 'inches';
-    fig.PaperPosition = [0 0 10 3];             % define location to save the images 
-    plot_name = ['All Pluronics','Fm0vC'];
-    plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-    print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
-else
-end
-%% Plotting D vs temp for each concentration
-for i = 1:length(fieldnames(av))
-    temperatures = fieldnames(av);
-    field = temperatures{i};
-    temperature = str2num(field(4:5));
-    color = colors(i*15,:);
-    k = 0;
-    
-    for pluronics = fieldnames(av.(field))'
-        k = k+1;
-        pluronic = pluronics{1};
-        temp = av.(field).(pluronic);
-        
-        if i == 1
-            fig = figure(k);
-            set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float 
-        else 
+        end
+        if k == 1
+            lgd = legend('25','30','35','37.5','40','42.5','location','southwest');
+            lgd.Title.String = 'F87 wt%';
+        elseif k == 2
+            lgd = legend('17.5','20','22.5','25','27.5','30','location','southwest');
+            lgd.Title.String = 'F127 wt%';
+        else
+            lgd = legend('20 ','25 ','27.5','30','32.5','35','location','southwest');
+            lgd.Title.String = 'P123 wt%';
         end
         
-        figure(k);
-            for j = 1:6
-                subplot(2,3,j)
-                    hold on
-                    set(gca,'YScale','log');
-                    errorbar(temperature,temp.D(j),temp.Dneg(j),temp.Dpos(j),'d','color',color,'markerfacecolor',color)
-                    axis([20 60 1e-5 1])
-                    xlabel([pluronic,' ',num2str(temp.c(j)),' wt%'])
-                    ylabel('D/D_0')
-                    yticks([1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
-            end
-    end
-    
-end
-
-if save_im == 'y'
-    for k = 1:3
-        pluronics = fieldnames(av.(field))';
-        pluronic = pluronics{k};
-        fig = figure(k);
-        fig.PaperUnits = 'inches';
-        fig.PaperPosition = [0 0 10 10];             % define location to save the images 
-        plot_name = [pluronic,'_DvT'];
-        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
-    end
-else
-end
-
-%% Plotting fm vs temp for each concentration
-
-for i = 1:length(fieldnames(av))
-    temperatures = fieldnames(av);
-    field = temperatures{i};
-    temperature = str2num(field(4:5));
-    color = colors(i*15,:);
-    k = 0;
-    
-    for pluronics = fieldnames(av.(field))'
-        k = k+1;
-        pluronic = pluronics{1};
-        temp = av.(field).(pluronic);
-        
-        if i == 1
-            fig = figure(k);
-            set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float 
-        else 
+        if save_im == 'y' && temperature == 55
+            fig.PaperUnits = 'inches';
+            fig.PaperPosition = [0 0 6 4];             % define location to save the images 
+            plot_name = [pluronic,'fmvT'];
+            plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+            print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+        else
         end
-        
-        figure(k*45);
-        set(k*45, 'WindowStyle', 'Docked');
-            for j = 1:6
-                subplot(2,3,j)
-                    hold on
-                    set(gca,'YScale','linear');
-                    plot(temperature,temp.fm0(j),'d','color',color,'markerfacecolor',color)
-                    axis([20 60 0 1.2])
-                    xlabel([pluronic,' ',num2str(temp.c(j)),' wt%'])
-                    ylabel('f_m')
-            end
     end
-    
-end
+end   
 
-if save_im == 'y'
-for k = 1:3
-    pluronics = fieldnames(av.(field))';
-    pluronic = pluronics{k};
-    fig = figure(2*45);
-    fig.PaperUnits = 'inches';
-    fig.PaperPosition = [0 0 10 10];             % define location to save the images 
-    plot_name = [pluronic,'_fmvT'];
-    plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-    print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
-end
-else
-end
-%% old
-% subplot(1,3,1)
-%     set(gca,'YScale','log');
-%     hold all
-%     errorbar(pd.c,pd.D,pd.Dneg,pd.Dpos,'db')
-%     axis([0.9*min(pd.c) 1.1*max(pd.c) 0.7*min(pd.D) 2*max(pd.D)])
-%     xlabel([id.(position).plur,' wt%'])
-%     ylabel('D/D_0 [\mum^2s^{-1}]')
-% 
-% subplot(1,3,2)
-%     hold on
-%     errorbar(pd.c,pd.r,pd.rlb,pd.rub,'or')
-%     axis([0.9*min(pd.c) 1.1*max(pd.c) 0.8*min(pd.r) 1.2*max(pd.r)])
-%     xlabel([id.(position).plur,' wt%'])
-%     ylabel('laser radius [um]')
-%     
-% subplot(1,3,3)
-%     hold on
-% %     plot(pd.c,pd.fm,'om')
-%     errorbar(pd.c,pd.fm,pd.fmlb,pd.fmub,'om')
-%     xlabel([id.(position).plur,' wt%'])
-%     ylabel('mobile fraction [fm]')
-%     axis([0.9*min(pd.c) 1.1*max(pd.c) 0.5 1.2])
-% 
-% 
-% 
-% %% plotting    
-% close all
-% fig = figure('name','All','visible','on');
-% set(fig, 'WindowStyle', 'Docked'); 
-% 
-% 
-% % need for loop to unpack
-% k = 0;
-% lgd = [];
-% syms = ['d','s','o'];
-% for topfield = fieldnames(id)'
-%     pluronic = topfield{1};
-%     C = parula(3*length(fieldnames(id)));
-%     i = 0;
-%     k = k+1;
-%     conc = [];
-%     C1(:,k) = C(2+2*k,:);
-%     for field = fieldnames(id.(pluronic))'
-%         position = field{1};
-%         fits2 = fits.(pluronic);
-%         id2 = id.(pluronic);
-%         i = i+1;
-%         D = fits2.(position).D/55.1;
-%         c = id2.(position).plwt;
-%         pxl = fits2.(position).pixel_size;
-%         r = fits2.(position).radius*pxl;
-%         rall(i) =r;
-%         conc(i) = c;
-%         Dall(i) = D; % from cheng to normalize by free soln BSA D
-%         Dneg = fits2.(position).errD(1)/55.1;
-%         Dpos = fits2.(position).errD(2)/55.1;
-%         Dnegall(i) = Dneg;
-%         Dposall(i) = Dpos;
+
+
+%%% OLD 
+% %% Plotting all fm0 data on one plot (without fit
+% fig = figure(12345);
+% set(12345, 'WindowStyle', 'Docked');
+% colors = parula(69);
+% for i = 1:length(fieldnames(av))
+%     temperatures = fieldnames(av); % temperature of the dataset
+%     field = temperatures{i};
+%     temperature = str2num(field(4:5));
+%     color = colors(i*15,:);
+%     k = 0;
+%     for pluronics = fieldnames(av.(field))'
+%         k = k+1;
+%         pluronic = pluronics{1};
+%         temp = av.(field).(pluronic);
+%         
+%         subplot(1,3,k)
+%             hold on
+%             plot(temp.c,temp.fm0,'d','color',color,'markerfacecolor',color)
+%             axis([0.9*min(temp.c) 1.1*max(temp.c) 0.1 1.2 ])
+%             xlabel([pluronic,' wt%'])
+%             ylabel('fraction of mobile proteins')
+%             if i ==4
+%             legend('25C','35C','45C','55C','location','best','NumColumns',2)
+%             else
+%             end
 %     end
-%     lgd{k} = pluronic;
-%     hold on 
-%     errorbar(conc,Dall,Dnegall,Dposall,'linestyle','none','Color',C1(:,k),'MarkerFaceColor',C1(:,k),'Marker',syms(k),'MarkerSize',10)
 % end
-% lgd{4} = 'F87 Cheng';
-% lgd{5} = 'F127 Cheng';
-% lgd{6} = 'P123 Cheng';
 % 
-% plot(F87c,F87d,'linestyle','none','Color',C1(:,1),'Marker',syms(1),'MarkerSize',10,'linewidth',2)
-% plot(F127c,F127d,'linestyle','none','Color',C1(:,2),'Marker',syms(2),'MarkerSize',10,'linewidth',2)
-% plot(P123c,P123d,'linestyle','none','Color',C1(:,3),'Marker',syms(3),'MarkerSize',10,'linewidth',2)
+% if save_im == 'y'
+%     fig.PaperUnits = 'inches';
+%     fig.PaperPosition = [0 0 14 4];             % define location to save the images 
+%     plot_name = ['All Pluronics','Fm0vC'];
+%     plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+%     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+% else
+% end
 % 
-% axis([5 45 1e-4 1e2])
-% set(gca,'YScale','log');
-% xlabel(['wt%'])
-% ylabel('D/D_0 [\mum^2s^{-1}]')
-% title('Diffusivity of BSA in Pluronic at 25\circC')
-% legend(lgd)
+
+% %% Plotting all temp data on one pluronic plot
+% colors = parula(69);
+% close all
+% fig = figure(123);
+% set(123, 'WindowStyle', 'Docked');
 % 
-% fig.PaperUnits = 'inches';
-% fig.PaperPosition = [0 0 8 6];             % define location to save the images 
-% plot_name = ['Cheng_vs_CSV_DvC_25C'];
-% plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
-% print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+% for i = 1:length(fieldnames(av))
+%     temperatures = fieldnames(av);
+%     field = temperatures{i};
+%     temperature = str2num(field(4:5));
+%     color = colors(i*15,:);
+%     for k = 1:3
+%         pluronics = fieldnames(av.(field))';
+%         pluronic = pluronics{k};
+%         temp = av.(field).(pluronic);
+%         
+%         subplot(2,3,k)
+%             
+%             
+%             errorbar(temp.c,temp.D,temp.Dneg,temp.Dpos,'d','color',color,'markerfacecolor',color)
+%             hold on
+%             set(gca,'YScale','log');
+%             axis([0.9*min(temp.c) 1.1*max(temp.c) 1e-6 2e-2])
+%             ylabel('D/D_0 [\mum^2s^{-1}]')
+%             yticks([1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
+% 
+%         subplot(2,3,k+3)  
+%             
+%             plot(temp.c,temp.fm0,'o','color',color,'markerfacecolor','none','linewidth',3)
+%             hold on
+%             axis([0.9*min(temp.c) 1.1*max(temp.c) 0 1 ])
+%             xlabel([pluronic,' wt%'])
+%             yticks([0 0.2 0.4 0.6 0.8 1])
+%             ylabel('f_m')
+% 
+%     end
+%     subplot(2,3,2)
+%     legend('D: 25C','D: 35C','D: 45C','D: 55C','location','north','orientation','horizontal','NumColumns', 2)
+%     subplot(2,3,5)
+%     legend('D: 25C','D: 35C','D: 45C','D: 55C','location','south','orientation','horizontal','NumColumns', 2)
+%     box on
+% end
+% 
+% if save_im == 'y'
+%     fig.PaperUnits = 'inches';
+%     fig.PaperPosition = [0 0 14 6];             % define location to save the images 
+%     plot_name = ['All Pluronics','DvC'];
+%     plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+%     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+% else
+% end
+
+% %% Plotting D vs temp for each concentration separate plots
+% for i = 1:length(fieldnames(av))
+%     temperatures = fieldnames(av);
+%     field = temperatures{i};
+%     temperature = str2num(field(4:5));
+%     color = colors(i*15,:);
+%     k = 0;
+%     
+%     for pluronics = fieldnames(av.(field))'
+%         k = k+1;
+%         pluronic = pluronics{1};
+%         temp = av.(field).(pluronic);
+%         
+%         if i == 1
+%             fig = figure(k);
+%             set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float 
+%         else 
+%         end
+%         
+%         figure(k);
+%             for j = 1:6
+%                 subplot(2,3,j)
+%                     hold on
+%                     set(gca,'YScale','log');
+%                     errorbar(temperature,temp.D(j),temp.Dneg(j),temp.Dpos(j),'d','color',color,'markerfacecolor',color)
+%                     axis([20 60 1e-6 2e-2])
+%                     title([pluronic,' ',num2str(temp.c(j)),' wt%'])
+%                     xlabel('Temperature \circC')
+%                     ylabel('D/D_0')
+%                     yticks([1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
+%             end
+%     end
+%     
+% end
+% 
+% if save_im == 'y'
+%     for k = 1:3
+%         pluronics = fieldnames(av.(field))';
+%         pluronic = pluronics{k};
+%         fig = figure(k);
+%         fig.PaperUnits = 'inches';
+%         fig.PaperPosition = [0 0 14 6];             % define location to save the images 
+%         plot_name = [pluronic,'_DvT'];
+%         plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+%         print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+%     end
+% else
+% end
+% %% Plotting fm vs temp for each concentration
+% 
+% for i = 1:length(fieldnames(av))
+%     temperatures = fieldnames(av);
+%     field = temperatures{i};
+%     temperature = str2num(field(4:5));
+%     color = colors(i*15,:);
+%     k = 0;
+%     
+%     for pluronics = fieldnames(av.(field))'
+%         k = k+1;
+%         pluronic = pluronics{1};
+%         temp = av.(field).(pluronic);
+%         
+%         if i == 1
+%             fig = figure(k);
+%             set(fig, 'WindowStyle', 'Docked');  %figure will dock instead of free float 
+%         else 
+%         end
+%         
+%         figure(k*45);
+%         set(k*45, 'WindowStyle', 'Docked');
+%             for j = 1:6
+%                 subplot(2,3,j)
+%                     hold on
+%                     set(gca,'YScale','linear');
+%                     plot(temperature,temp.fm0(j),'d','color',color,'markerfacecolor',color)
+%                     axis([20 60 0 1.2])
+%                     xlabel([pluronic,' ',num2str(temp.c(j)),' wt%'])
+%                     ylabel('f_m')
+%             end
+%     end
+%     
+% end
+% 
+% if save_im == 'y'
+% for k = 1:3
+%     pluronics = fieldnames(av.(field))';
+%     pluronic = pluronics{k};
+%     fig = figure(2*45);
+%     fig.PaperUnits = 'inches';
+%     fig.PaperPosition = [0 0 14 6];             % define location to save the images 
+%     plot_name = [pluronic,'_fmvT'];
+%     plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+%     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+% end
+% else
+% end
+%    

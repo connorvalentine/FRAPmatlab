@@ -70,7 +70,7 @@ global folder1 folder2
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
-save_im = 'n'; 
+save_im = 'y'; 
 
 % Part 3: Are you troubleshooting the fits? 
 % Note:         Select 'y' or 'n'
@@ -78,7 +78,7 @@ trouble = 'n';
 
 % do you want to make movies? (yes is first time analyzing)
 global makemovies npoints
-makemovies = 'n';
+makemovies = 'y';
 
 % number of points per wt%. is usually 3 now.
 npoints = 3;
