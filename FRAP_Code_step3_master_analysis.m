@@ -43,15 +43,7 @@
     av = struct(); % averaged data structure
     all = struct(); % all data we want to plot maybe
     save_im = 'y';
-%% cheng comparison data
-F127c = [7;10;12;15;17.5;20;23;25;27];
-F127d = [0.2;0.1;0.08;0.04;0.025;0.012;0.009;0.006;0.003];
 
-F87c = [15;20;25;30;37;40;43];
-F87d = [0.06;0.035;0.017;0.005;0.0017;0.001;0.0004];
-
-P123c = [10;15;20;30;33;35];
-P123d = [0.18;0.12;0.07;0.004;0.0004;0.00025];
 
 %% importing the D0 data for BSA in free solution
 id_BSA = struct();
@@ -136,28 +128,7 @@ cd(mainfolder)
 
 [av,all] = fun_data_average(data,id,av);
 
-%% importing light scattering data to use instead of the FRAP data
-% D_mean = [56.0;75.7;94.8;99.8];
-% D_err = [0.75;0.80;0.40;3.18];
-% k = 0;
-% 
-% for topfield = fieldnames(av)'
-%     k = k+1;
-%     temperature_field = topfield{1}
-%     for field = fieldnames(id)'
-%         pluronic_field = field{1}
-%         BSA_fields = fieldnames(avBSA.(temperature_field));
-%         BSA_field = BSA_fields{1};
-%         disp(BSA_field)
-%         
-%         D0 = D_mean(k)
-%         Dneg0 = D_err(k)
-%         Dpos0 = D_err(k)
-%     
-%     end
-% end
-
-%% Plotting all the data at each temperature in subplots
+%% Normalizing the data for use down below
 %normalizing the data by the bsa in solution D0 data. Using Light
 %scattering data for D0 in solution not the FRAP
 D_mean = [56.0;75.7;94.8;99.8];
@@ -182,9 +153,9 @@ for topfield = fieldnames(av)'
         Dneg0 = D_err(k);
         Dpos0 = D_err(k);
 
-        D_normalized = D_temp/D0;
-        D_normalized_neg = D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
-        D_normalized_pos = D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
+        D_normalized = 55.1* D_temp/D0; %% bug, its already normalized by 55.1
+        D_normalized_neg =  D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
+        D_normalized_pos =  D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
         
         av.(temperature_field).(pluronic_field).D =  D_normalized;
         av.(temperature_field).(pluronic_field).Dneg = D_normalized_neg;
@@ -193,7 +164,18 @@ for topfield = fieldnames(av)'
 end
 
 
-%% Plotting all temp data on separate  pluronic plot
+%% Plotting all D v C data on separate  pluronic plot
+% cheng comparison data
+F127c = [7;10;12;15;17.5;20;23;25;27];
+F127d = [0.2;0.1;0.08;0.04;0.025;0.012;0.009;0.006;0.003];
+
+F87c = [15;20;25;30;37;40;43];
+F87d = [0.06;0.035;0.017;0.005;0.0017;0.001;0.0004];
+
+P123c = [10;15;20;30;33;35];
+P123d = [0.18;0.12;0.07;0.004;0.0004;0.00025];
+
+% normal plots
 all_colors = parula(69);
 close all
 colors(1,:) = all_colors(5,:);
@@ -217,14 +199,33 @@ for i = 1:length(fieldnames(av))
         errorbar(temp.c,temp.D,temp.Dneg,temp.Dpos,'d','color',color,'markerfacecolor',color)
         hold on
         set(gca,'YScale','log');
-        axis([0.95*min(temp.c) 1.05*max(temp.c) 1e-6 2e-2])
+        axis([0.95*min(temp.c) 1.05*max(temp.c) 1e-4 1e0])
         ylabel('D/D_0 [\mum^2s^{-1}]')
         xlabel([pluronic ,' wt%'])
         yticks([1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
-        legend('25C','35C','45C','55C','location','southwest','orientation','vertical','NumColumns',1)
+        
+        if k == 1 && i ==4
+            legend('25C','35C','45C','55C','location','eastoutside','orientation','vertical','NumColumns',1)
+        elseif k ==2 && i ==4
+            legend('25C','35C','45C','55C','location','eastoutside','orientation','vertical','NumColumns',1)
+        elseif k ==3 && i ==4
+            legend('25C','35C','45C','55C','location','eastoutside','orientation','vertical','NumColumns',1)
+        end        
+%         if k == 1 && i ==4
+%             plot(F87c,F87d,'ko','MarkerFaceColor','k')
+%             legend('25C','35C','45C','55C','Reported Data 25C','location','eastoutside','orientation','vertical','NumColumns',1)
+%         elseif k ==2 && i ==4
+%             plot(F127c,F127d,'ko','MarkerFaceColor','k')
+%             legend('25C','35C','45C','55C','Reported Data 25C','location','eastoutside','orientation','vertical','NumColumns',1)
+%         elseif k ==3 && i ==4
+%             plot(P123c,P123d,'ko','MarkerFaceColor','k')
+%             legend('25C','35C','45C','55C','Reported Data 25C','location','eastoutside','orientation','vertical','NumColumns',1)
+%         end
+        
         if save_im == 'y' && temperature == 55
             fig.PaperUnits = 'inches';
-            fig.PaperPosition = [0 0 4.5 4];             % define location to save the images 
+            fig.PaperPosition = [0 0 6.5 4];             % define location to save the images 
+%             plot_name = [pluronic,'DvC_withChengData'];
             plot_name = [pluronic,'DvC'];
             plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
             print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
@@ -279,7 +280,7 @@ for i = 1:length(fieldnames(av))
  end
 %% Plotting D vs T for each concentration separate plots
 close all
-colors = jet(6);
+colors = parula(7);
 for i = 1:length(fieldnames(av))
     temperatures = fieldnames(av);
     field = temperatures{i};
@@ -299,10 +300,10 @@ for i = 1:length(fieldnames(av))
             hold on
             set(gca,'YScale','log');
             errorbar(temperature,temp.D(j),temp.Dneg(j),temp.Dpos(j),'d','color',colors(j,:),'markerfacecolor',colors(j,:))
-            axis([20 60 1e-6 2e-2])
+            axis([20 60 1e-4 1])
             xlabel('Temperature \circC')
             ylabel('D/D_0')
-            yticks([1e-6 1e-5 1e-4 1e-3 1e-2 1e-1 1e0])
+            yticks([ 1e-4 1e-3 1e-2 1e-1 1e0])
         end
         if k == 1
             lgd = legend('25','30','35','37.5','40','42.5','location','eastoutside');
@@ -328,7 +329,6 @@ for i = 1:length(fieldnames(av))
 end
 %% Plotting fm vs T for each concentration separate plots
 close all
-colors = jet(6);
 for i = 1:length(fieldnames(av))
     temperatures = fieldnames(av);
     field = temperatures{i};

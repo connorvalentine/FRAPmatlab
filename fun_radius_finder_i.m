@@ -1,7 +1,7 @@
 %% inputs and outputs
 % inputs: id structure and fits structure. Save_im is 'y' or 'no'
 % need to import position as well
-function [center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center_coords,previous_norm_ratio,t)
+function [center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center_coords,previous_norm_ratio,t,dt)
     drift_flag = 0;
     im0 = fits.(position).im0;
     im0sm = fits.(position).im0sm2;
@@ -83,14 +83,7 @@ function [center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,i
     ref_0_i = mean(masked_reference_image0(masked_reference_image0 > 0)); % find mean of all pixels that are not == 0
      
     if t == 2 || mod(t,2) == 0
-         
-        subplot(1,2,1) %show the first image after photobleaching 
-            imshow(imi,[min(imi(:)),max(imi(:))],'Border','tight','InitialMagnification', 'fit');
-            hold on
-            viscircles(center,radius,'linewidth',0.2,'color','g');
-            title(["image at time " + string(t)])
-            hold off 
-        subplot(1,2,2) % plot the black and white image
+        subplot(1,2,1) % plot the black and white image
             imshow(bw3,[0,1],'Border','tight','InitialMagnification', 'fit');
             hold on
             viscircles(center,radius,'linewidth',0.2,'color','g','LineStyle',':');
@@ -98,7 +91,13 @@ function [center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,i
                 viscircles(stats2.Centroid(k,:),stats2.EquivDiameter(k,1)/2,'linewidth',0.2,'color','b');
             end
             hold off
-            title(["analyzed at time " + string(t)])
+            title(["analyzed at time " + string(t)])        
+        subplot(1,2,2) %show the first image after photobleaching 
+            imshow(imi,[min(imi(:)),max(imi(:))],'Border','tight','InitialMagnification', 'fit');
+            hold on
+            viscircles(center,radius,'linewidth',0.2,'color','g');
+            text(1024,1800,['Time = ', num2str(round(dt/60,0)), ' min'])
+            hold off 
 
         drawnow % necessary or it wont plot
      else

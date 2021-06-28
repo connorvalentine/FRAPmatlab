@@ -1,5 +1,5 @@
 function [alldata] = fun_frap_frames_drift_tracking(id,fits,alldata)
-global boxfolder folder1 folder2 
+global boxfolder folder1 folder2 makemovies moviefolder
 folder3 = 'frap';
 counter = 0;
 
@@ -12,12 +12,33 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     % watch it run
     fig2 = figure('name',position,'visible','on');
     set(fig2, 'WindowStyle', 'Docked');  %figure will dock instead of free float
-    
+    set(gcf, 'Color','white')
+    set(gca, 'nextplot','replacechildren', 'Visible','off');
+
     % Make a list of each image name in our position folder
     list = dir(fullfile(boxfolder,folder1,folder2,folder3,position,'*.tif')); % lists all files with .tif ending in the position folder
     data = rmfield(list,{'bytes','date','isdir','datenum'});  % cleaning up the data structure
     n_images = length(list);
     
+    if makemovies == 'y'
+            if counter == 3
+                counter = 0;
+            else
+            end
+            counter = counter +1;
+        a = fieldnames(id);
+        pp = a{1};    
+        struct_name = [id.(pp).plur,'_',id.(pp).prot,'_',id.(pp).temp,'_',folder2];
+       	movie_name = [struct_name,'_',num2str(round(id.(position).plwt)),'wtp','movie',num2str(counter)];
+        movie_path = fullfile(moviefolder,movie_name); % can change saved name here
+        vidObj = VideoWriter([movie_path, '.avi']);
+        vidObj.Quality = 100;
+        vidObj.FrameRate = 10;
+        open(vidObj);
+    else 
+    end
+        
+    %# create movie
     % iterate through the images in data structure
     for t = 1:n_images 
         try
@@ -40,7 +61,11 @@ for field = fieldnames(id)' % iterate through the position list in id structure
                 ref_i = fits.(position).ref_1;
                 I_ti = fits.(position).I_t1;
             else 
-                [center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center,previous_norm_ratio,t);
+                [center,ref_i,I_ti,ref_0_i,drift_flag] = fun_radius_finder_i(position,imi,fits,previous_center,previous_norm_ratio,t,dt);
+                if makemovies == 'y'
+                    writeVideo(vidObj, getframe(gca));
+                else
+                end
                 previous_center = center;
                 
                 if drift_flag == 1
@@ -71,6 +96,16 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             data(t).('ref_i') = ref_i;
             data(t).('ref_ratio') = norm_ratio;
             data(t).('IN_ti') = normalized_i;
+            
+%             if makemovies == 'y'
+%                 close(gcf)
+%                 %# save as AVI file, and open it using system video player
+%                 close(vidObj);
+%             else 
+%             end
+            
+            
+            
         catch e
             warning('weird thing happened')
             fprintf(1,'There was an error! The message was:\n%s',e.message);

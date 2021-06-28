@@ -78,7 +78,7 @@ trouble = 'n';
 
 % do you want to make movies? (yes is first time analyzing)
 global makemovies npoints
-makemovies = 'y';
+makemovies = 'n';
 
 % number of points per wt%. is usually 3 now.
 npoints = 3;
