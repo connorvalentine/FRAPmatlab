@@ -48,7 +48,7 @@
     set(groot, 'DefaultAxesYGrid', 'off')
     set(groot, 'DefaultAxesXGrid', 'off') 
 % turn the error message beeps off
-    beep off
+    beep on
 % Reset the environment
     clear all;
     clear global all;
@@ -65,8 +65,8 @@
 %               frap folder must be named 'frap'
 
 global folder1 folder2
-    folder1 = 'F87_BSA_55C';
-    folder2 = 'trial_6';
+    folder1 = 'F87_CHA_55C';
+    folder2 = 'trial_1';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
@@ -207,7 +207,10 @@ for field = fieldnames(alldata)'
     
     plot([0,t_fit(end)],[Ifitparam,Ifitparam])
     title(position);
-    axis([0,max(t),0,1.2]);
+    try
+        axis([0,max(t),0,1.2]);
+    catch
+    end
     xlabel('Time [s]');
     ylabel('Normalized Intensity');
 
@@ -291,4 +294,4 @@ save(id_name,'pd');
 cd(mainfolder);% cd back to main folder
 % complete
 disp('Analysis Complete')
-
+beep

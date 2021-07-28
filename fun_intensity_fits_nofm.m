@@ -29,7 +29,7 @@ for field = fieldnames(alldata)'
         
         norm_i = [alldata.(position).IN_ti]';
         norm_i = norm_i(ind:end);
-        fm_ind = length(norm_i)-4; % 
+        fm_ind = length(norm_i)-10; % 
         fm0 = (mean(norm_i(fm_ind:end))-norm_i(1))/(1-norm_i(1)); % 
         fm0err = std(norm_i(fm_ind:end)); % 
 %         fm_ind = find(norm_i == max(norm_i)); % version 2   % 55C P123

@@ -28,7 +28,7 @@
     mainfolder = cd;
     
 %% define the folder/experiment we are going to make a parameter structure for.
-    folder1 = 'P123_HDF_25C';
+    folder1 = 'F87_CHA_55C';
     folder2 ='trial_1';
 
 %% Specify the parameters you want to save that do not change. Experimental info
@@ -38,23 +38,18 @@
 %     conc = [17.5;20;22.5;25;27.5;30];
 %     conc = [17.5;17.5;17.5;20;20;20;22.5;22.5;22.5;25;25;25;27.5;27.5;27.5;30;30;30]; 
 
-%     pluronic = 'F87';
-%     conc = [30;30;30;37.5;37.5;37.5;42.5;42.5;42.5];
-% %     conc = [25;30;35;37.5;40;42.5];    
-%     conc = [25;25;25;30;30;30;35;35;35;37.5;37.5;37.5;40;40;40;42.5;42.5;42.5];  
-
-    pluronic = 'P123';
-    conc = [25;25;25;30;30;30;35;35;35];
-
-%     conc = [20;25;27.5;30;32.5;35]; %concentrations in order of position # from least to greatest
-%     conc = [20;20;20;25;25;25;27.5;27.5;27.5;30;30;30;32.5;32.5;32.5;35;35;35];
-
-    prot = 'BSA'; % must be 3 letter str
-    prot_c = '3p3'; %must be 3 letter str
-    temperature = '25C'; % needs to be string in this format. can pull num out later if needed
-    magnification = '20X';
+    pluronic = 'F87';
+    conc = [37.5;37.5;37.5;40;40;40;42.5;42.5;42.5];
+%     pluronic = 'F127';
+%     conc = [25;25;25;27.5;27.5;27.5;30;30;30];
+%     
+    prot = 'CHA'; % must be 3 letter str
+    protc = '0p7'; %must be 3 letter str
+    temperature = '55C'; % needs to be string in this format. can pull num out later if needed
+   
 
 %% pixel size calibrations are prone to changing by other users... damn
+ magnification = '20X';
 if magnification == '10X'
     pixel_size_manual = 0.645; % 0.645 um/pixel for 10x 
 elseif magnification == '20X'
