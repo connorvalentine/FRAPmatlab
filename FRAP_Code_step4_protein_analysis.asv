@@ -473,16 +473,15 @@ mainT.('HSA') = pluronics
 
 
 
-%
-clc
+%%
 proteinCount = 0;
 numFigures = 0;
 
 for proteins = fieldnames(main)'
-    protein_name = proteins{1};
+    protein_name = proteins{1}
     protein_data = main.(proteins{1});
+    
     i = 0;
-   
    
     for temperatures = fieldnames(protein_data)' %all25C, all35C etc
         i = i+1;
@@ -493,34 +492,22 @@ for proteins = fieldnames(main)'
             pluronics = fieldnames(protein_data.(field))';
             pluronic = pluronics{k};
             data = protein_data.(field).(pluronic);
-            
+            data_structure = struct();
             for v = 1:length(data.c)
-                if temperature == 25
-                    concentration = ['wt',num2str(round(data.c(v),0))];
-                    mainT.(protein_name).(pluronic).(concentration) = struct();
-                    mainT.(protein_name).(pluronic).(concentration).('T') = temperature;
-                    mainT.(protein_name).(pluronic).(concentration).('D') = data.D(v);
-                    mainT.(protein_name).(pluronic).(concentration).('Dneg') = data.Dneg(v);
-                    mainT.(protein_name).(pluronic).(concentration).('Dpos') = data.Dpos(v);
-                    mainT.(protein_name).(pluronic).(concentration).('fm0') = data.fm0(v);
-                    mainT.(protein_name).(pluronic).(concentration).('fmlb') = data.fmlb(v);
-                    mainT.(protein_name).(pluronic).(concentration).('fmub') = data.fmub(v);
-                    mainT.(protein_name).(pluronic).(concentration).('rh_prot') = data.rh_prot(v);
-                else 
-                    concentration = ['wt',num2str(round(data.c(v),0))];
-                    mainT.(protein_name).(pluronic).(concentration).T(i) = temperature;
-                    mainT.(protein_name).(pluronic).(concentration).D(i) = data.D(v);
-                    mainT.(protein_name).(pluronic).(concentration).Dneg(i) = data.Dneg(v);
-                    mainT.(protein_name).(pluronic).(concentration).Dpos(i)  = data.Dpos(v);
-                    mainT.(protein_name).(pluronic).(concentration).fm0(i)  = data.fm0(v);
-                    mainT.(protein_name).(pluronic).(concentration).fmlb(i)  = data.fmlb(v);
-                    mainT.(protein_name).(pluronic).(concentration).fmub(i)  = data.fmub(v);
-                    mainT.(protein_name).(pluronic).(concentration).rh_prot(i)  = data.rh_prot(v);   
-                end
+                concentration = ['wt',num2str(round(data.c(v),0))];
+                data_structure.(concentration) = struct();
+                data_structure.(concentration).('D') = data.D(v);
+                data_structure.(concentration).('Dneg') = data.Dneg(v);
+                data_structure.(concentration).('Dpos') = data.Dpos(v);
+                data_structure.(concentration).('fm0') = data.fm0(v);
+                data_structure.(concentration).('fmlb') = data.fmlb(v);
+                data_structure.(concentration).('fmub') = data.fmub(v);
+                data_structure.(concentration).('rh_prot') = data.rh_prot(v);
             end
+            mainT.(protein_name).(
         end
-    end
 
+    end
 end
 %% Plotting all D v C BSA data on separate  pluronic plots
 
