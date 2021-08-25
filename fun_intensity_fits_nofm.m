@@ -46,9 +46,10 @@ for field = fieldnames(alldata)'
         norm_i(NANind) = [];
         x(NANind) = [];
         
-
+        
         % fake time data to put into the fit equation
         t_fit = linspace(0,x(end),500)'; 
+        disp(length(t_fit))
 
         % fm is the mobile fraction of proteins. 
         % in this case, it is taking as the ratio of the amount of intensity

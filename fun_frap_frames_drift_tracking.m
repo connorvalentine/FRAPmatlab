@@ -1,3 +1,5 @@
+
+
 function [alldata] = fun_frap_frames_drift_tracking(id,fits,alldata)
 global boxfolder folder1 folder2 makemovies moviefolder
 folder3 = 'frap';
@@ -6,6 +8,7 @@ counter = 0;
 for field = fieldnames(id)' % iterate through the position list in id structure
     tic
     position = field{1};
+%     position = 'Pos9';
     folder3 = 'frap';
 
     % make one figure that will be updated at every 10th timepoint just to
@@ -41,16 +44,16 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     %# create movie
     % iterate through the images in data structure
     for t = 1:n_images 
-        try
-            % add time information to the data structure
-            [data] = fun_time(data,t); 
-           % add elapsed time from received time of first frap frame to data struct.
-            time1 = data(1).r_time;
-            time1 = datevec(time1);
-            time_i = data(t).r_time;
-            time_i  = datevec(time_i);
-            dt = etime(time_i,time1); % calculate elapsed time from the first image in seconds
-            
+        % add time information to the data structure
+        [data] = fun_time(data,t); 
+       % add elapsed time from received time of first frap frame to data struct.
+        time1 = data(1).r_time;
+        time1 = datevec(time1);
+        time_i = data(t).r_time;
+        time_i  = datevec(time_i);
+        dt = etime(time_i,time1); % calculate elapsed time from the first image in seconds
+        data(t).('dt') = dt; %save to data structure
+        try 
             % calculate pixel intensity information
             f1 = fullfile(data(t).folder,data(t).name);
             imi = double(imread(f1));
@@ -91,7 +94,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
             normalized_i = (I_ti./fits.(position).I_t0).*(norm_ratio); 
 
             % adding to data structure
-            data(t).('dt') = dt; %save to data structure
+
             data(t).('I_ti') = I_ti;
             data(t).('ref_i') = ref_i;
             data(t).('ref_ratio') = norm_ratio;
@@ -103,9 +106,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
 %                 close(vidObj);
 %             else 
 %             end
-            
-            
-            
+
         catch e
             warning('weird thing happened')
             fprintf(1,'There was an error! The message was:\n%s',e.message);

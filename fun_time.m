@@ -14,7 +14,19 @@
 % pixel_size is the size of the pixel in microns 
 
 % PIXEL SIZE ONLY WORKS IF YOU RAN A PIXEL SIZE CALIBRATION AT THE SAME
-% MAGNIFICATION BEFORE YOU STARTED THE EXPERIMENT
+% % MAGNIFICATION BEFORE YOU STARTED THE EXPERIMENT
+% % Make a list of each image name in our position folder
+% global boxfolder folder1 folder2 
+% folder3 = 'frap';
+% counter = 0;
+% position = 'Pos9';
+% list = dir(fullfile(boxfolder,folder1,folder2,folder3,position,'*.tif')); % lists all files with .tif ending in the position folder
+% data = rmfield(list,{'bytes','date','isdir','datenum'});  % cleaning up the data structure
+% n_images = length(list);
+%    
+% for t = 1:n_images 
+%     [data] = fun_time(data, t);
+% end
 
 function [data] = fun_time(data, t)
 %define the metadata filename
@@ -44,7 +56,7 @@ function [data] = fun_time(data, t)
     temp2 = info(p2:p3);
     lb2 = strfind(temp2,':');
     ub2 = strfind(temp2,'-');
-    r_time = temp2(lb2(1)+3:ub2(3)-2); % keep as string
+    r_time = temp2(lb2(1)+3:ub2(3)-2)% keep as string
 
 % pull out pixel size
     temp3 = info(p3:p4);

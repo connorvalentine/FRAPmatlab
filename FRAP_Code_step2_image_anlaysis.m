@@ -65,8 +65,8 @@
 %               frap folder must be named 'frap'
 
 global folder1 folder2
-    folder1 = 'F87_CHA_55C';
-    folder2 = 'trial_1';
+    folder1 = 'F127_BSA_55C';
+    folder2 = 'trial_7';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
@@ -121,7 +121,7 @@ tic
 
 [fits] = fun_intensity_fits_nofm(fits,alldata);
 
-
+%%
 disp(["all data fit in " + string(round(toc)) + " s."])
 %
 % adding variables to id that can be useful for plotting 
