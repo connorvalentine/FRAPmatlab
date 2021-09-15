@@ -41,7 +41,7 @@ for field = fieldnames(id)' % iterate through the position list in id structure
     else 
     end
         
-    %# create movie
+   
     % iterate through the images in data structure
     for t = 1:n_images 
         % add time information to the data structure

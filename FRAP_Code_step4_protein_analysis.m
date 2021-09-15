@@ -49,6 +49,11 @@ colors4(2,:) = all_colors(40,:);
 colors4(3,:) = all_colors(20,:);
 colors4(4,:) = all_colors(1,:);
 
+all_colors = parula(69);
+colors3(1,:) = all_colors(10,:);
+colors3(2,:) = all_colors(30,:);
+colors3(3,:) = all_colors(50,:);
+
 %% Initialize Data Folder, structures, and sample ID data
     global boxfolder outputfolder 
     boxfolder = 'C:\Users\user\Box\Sorted Data FRAP\Sorted Data';
@@ -165,6 +170,7 @@ for topfield = fieldnames(BSA)'
     k = k+1;
     temperature_field = topfield{1};
     rh = rh_BSA(k); %hydrodynamic radius at this temperature from DLS
+    rh_std = rh_err_BSA(k);
     for temperature_name = fieldnames(id)'
         pluronic_field = temperature_name{1};
         
@@ -177,6 +183,7 @@ for topfield = fieldnames(BSA)'
         Dpos0 = D_err_BSA(k);
 
         D_normalized = 55.1* D_temp/D0; %% bug, its already normalized by 55.1 when it comes out of the data analysis
+        D_raw = 55.1* D_temp;
         
         D_normalized_neg =  D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
         D_normalized_pos =  D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
@@ -184,8 +191,13 @@ for topfield = fieldnames(BSA)'
         % adding the hydrodynamic radius of the protein to this data
         rh_prot = zeros(length(D_normalized),1);
         rh_prot = rh_prot + rh;
+        % adding the std of hydrodynamic radius of the protein to this data
+        rh_prot_std = zeros(length(D_normalized),1);
+        rh_prot_std = rh_prot_std + rh_std;
         
         BSA.(temperature_field).(pluronic_field).rh_prot = rh_prot';
+        BSA.(temperature_field).(pluronic_field).rh_prot_std = rh_prot_std';
+        BSA.(temperature_field).(pluronic_field).D_raw =  D_raw;
         BSA.(temperature_field).(pluronic_field).D =  D_normalized;
         BSA.(temperature_field).(pluronic_field).Dneg = D_normalized_neg;
         BSA.(temperature_field).(pluronic_field).Dpos =  D_normalized_pos;
@@ -253,6 +265,8 @@ for topfield = fieldnames(LYS)'
     k = k+1;
     temperature_field = topfield{1};
     rh = rh_LYS(k); %hydrodynamic radius at this temperature from DLS
+    rh_std = rh_err_LYS(k);
+    
     for temperature_name = fieldnames(id)'
         pluronic_field = temperature_name{1};
         
@@ -265,6 +279,7 @@ for topfield = fieldnames(LYS)'
         Dpos0 = D_err_LYS(k);
 
         D_normalized = 55.1* D_temp/D0; %% bug, its already normalized by 55.1 when it comes out of the data analysis
+        D_raw = 55.1* D_temp;
         
         D_normalized_neg =  D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
         D_normalized_pos =  D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
@@ -273,7 +288,13 @@ for topfield = fieldnames(LYS)'
         rh_prot = zeros(length(D_normalized),1);
         rh_prot = rh_prot + rh;
         
+        % adding the std of hydrodynamic radius of the protein to this data
+        rh_prot_std = zeros(length(D_normalized),1);
+        rh_prot_std = rh_prot_std + rh_std;
+        
         LYS.(temperature_field).(pluronic_field).rh_prot = rh_prot';
+        LYS.(temperature_field).(pluronic_field).rh_prot_std = rh_prot_std';
+         LYS.(temperature_field).(pluronic_field).D_raw =  D_raw;
         LYS.(temperature_field).(pluronic_field).D =  D_normalized;
         LYS.(temperature_field).(pluronic_field).Dneg = D_normalized_neg;
         LYS.(temperature_field).(pluronic_field).Dpos =  D_normalized_pos;
@@ -341,6 +362,7 @@ for topfield = fieldnames(CHA)'
     k = k+1;
     temperature_field = topfield{1};
     rh = rh_CHA(k); %hydrodynamic radius at this temperature from DLS
+    rh_std = rh_err_CHA(k);
     for temperature_name = fieldnames(id)'
         pluronic_field = temperature_name{1};
         
@@ -353,6 +375,7 @@ for topfield = fieldnames(CHA)'
         Dpos0 = D_err_CHA(k);
 
         D_normalized = 55.1* D_temp/D0; %% bug, its already normalized by 55.1 when it comes out of the data analysis
+        D_raw = 55.1* D_temp;
         
         D_normalized_neg =  D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
         D_normalized_pos =  D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
@@ -361,7 +384,13 @@ for topfield = fieldnames(CHA)'
         rh_prot = zeros(length(D_normalized),1);
         rh_prot = rh_prot + rh;
         
+        % adding the std of hydrodynamic radius of the protein to this data
+        rh_prot_std = zeros(length(D_normalized),1);
+        rh_prot_std = rh_prot_std + rh_std;
+        
         CHA.(temperature_field).(pluronic_field).rh_prot = rh_prot';
+        CHA.(temperature_field).(pluronic_field).rh_prot_std = rh_prot_std';
+        CHA.(temperature_field).(pluronic_field).D_raw =  D_raw;
         CHA.(temperature_field).(pluronic_field).D =  D_normalized;
         CHA.(temperature_field).(pluronic_field).Dneg = D_normalized_neg;
         CHA.(temperature_field).(pluronic_field).Dpos =  D_normalized_pos;
@@ -429,6 +458,7 @@ for topfield = fieldnames(HSA)'
     k = k+1;
     temperature_field = topfield{1};
     rh = rh_HSA(k); %hydrodynamic radius at this temperature from DLS
+    rh_std = rh_err_HSA(k);
     for temperature_name = fieldnames(id)'
         pluronic_field = temperature_name{1};
         
@@ -441,6 +471,7 @@ for topfield = fieldnames(HSA)'
         Dpos0 = D_err_HSA(k);
 
         D_normalized = 55.1* D_temp/D0; %% bug, its already normalized by 55.1 when it comes out of the data analysis
+        D_raw = 55.1* D_temp;
         
         D_normalized_neg =  D_normalized.*sqrt((Dneg_temp./D_temp).^2 + (Dneg0./D0).^2);
         D_normalized_pos =  D_normalized.*sqrt((Dpos_temp./D_temp).^2 + (Dpos0./D0).^2);
@@ -449,13 +480,19 @@ for topfield = fieldnames(HSA)'
         rh_prot = zeros(length(D_normalized),1);
         rh_prot = rh_prot + rh;
         
+        % adding the std of hydrodynamic radius of the protein to this data
+        rh_prot_std = zeros(length(D_normalized),1);
+        rh_prot_std = rh_prot_std + rh_std;
+        
+        
         % adding the temperature to the matrix (is dumb workaround)
         Tmatrix = zeros(length(D_normalized),1);
         T = Tmatrix+str2num(temperature_field(4:5));
         
         HSA.(temperature_field).(pluronic_field).T = T';
         HSA.(temperature_field).(pluronic_field).rh_prot = rh_prot';
-        HSA.(temperature_field).(pluronic_field).rh_prot = rh_prot';
+        HSA.(temperature_field).(pluronic_field).rh_prot_std =rh_prot_std';
+        HSA.(temperature_field).(pluronic_field).D_raw = D_raw
         HSA.(temperature_field).(pluronic_field).D =  D_normalized;
         HSA.(temperature_field).(pluronic_field).Dneg = D_normalized_neg;
         HSA.(temperature_field).(pluronic_field).Dpos =  D_normalized_pos;
@@ -510,6 +547,7 @@ for proteins = fieldnames(main)'
                     mainT.(protein_name).(pluronic).(concentration) = struct();
                     mainT.(protein_name).(pluronic).(concentration).('T') = temperature;
                     mainT.(protein_name).(pluronic).(concentration).('D') = data.D(v);
+                    mainT.(protein_name).(pluronic).(concentration).('D_raw') = data.D_raw(v);
                     mainT.(protein_name).(pluronic).(concentration).('Dneg') = data.Dneg(v);
                     mainT.(protein_name).(pluronic).(concentration).('Dpos') = data.Dpos(v);
                     mainT.(protein_name).(pluronic).(concentration).('fm0') = data.fm0(v);
@@ -520,6 +558,7 @@ for proteins = fieldnames(main)'
                     concentration = ['wt',num2str(round(data.c(v),0))];
                     mainT.(protein_name).(pluronic).(concentration).T(i) = temperature;
                     mainT.(protein_name).(pluronic).(concentration).D(i) = data.D(v);
+                    mainT.(protein_name).(pluronic).(concentration).D_raw(i) = data.D_raw(v);
                     mainT.(protein_name).(pluronic).(concentration).Dneg(i) = data.Dneg(v);
                     mainT.(protein_name).(pluronic).(concentration).Dpos(i)  = data.Dpos(v);
                     mainT.(protein_name).(pluronic).(concentration).fm0(i)  = data.fm0(v);
@@ -575,6 +614,8 @@ for proteins = fieldnames(lgd_names)'
     end
 end
 
+lgd_names.('all') = {'37.5wt% F87';'40wt% F87';'42.5wt% F87';'25wt% F127';'27.5wt% F127';'30wt% F127'};
+
 % legend names when only sampels with saxs data
 lgd_names_saxs = struct();
 pluronics = struct();
@@ -599,7 +640,7 @@ for proteins = fieldnames(lgd_names_saxs)'
         
         if strcmp(protein_name, 'BSA')
             if strcmp(pluronic,'F87') 
-                lgd_names_saxs.(protein_name).(pluronic) = {'30 wt%';'35 wt%';'42.5 wt%'};
+                lgd_names_saxs.(protein_name).(pluronic) = {'37.5 wt%';'40 wt%';'42.5 wt%'};
             elseif strcmp(pluronic,'F127') 
                 lgd_names_saxs.(protein_name).(pluronic) = {'22.5 wt%';'30 wt%'};
             elseif strcmp(pluronic,'P123') 
@@ -621,10 +662,9 @@ end
 % This makes a better data structure for plotting things vs Temperature
 mainSAXS = mainT;
 
-
-SAXS_path = 'C:\Users\user\Desktop\mathub\APS 2021';
+SAXS_path = 'C:\Users\user\Box\Presentations\0_Papers\BSA Diffusion\Geometry of FCC and BCC and calculations\SAXS 2021 data and DLS';
 filename = 'SAXS_data_clean.xlsx';
-SAXS_data = readtable(fullfile(SAXS_path,filename),'Range','A1:I37');
+SAXS_data = readtable(fullfile(SAXS_path,filename),'Range','A1:L53');
 
 pluronic_find = ismember(SAXS_data.pluronic,'F127');
 wt_find =   ismember(SAXS_data.wt,22);
@@ -645,9 +685,10 @@ for proteins = fieldnames(mainT)'
             c = str2num(c_string(3:4));
             wt_find =   ismember(SAXS_data.wt,c);
             
-            if sum(wt_find) == 0
-                mainSAXS.(protein_name).(pluronic) = rmfield(mainSAXS.(protein_name).(pluronic),c_string)
-                disp(['No SAXS data', c_string])
+            if sum(wt_find.*pluronic_find) == 0
+                mainSAXS.(protein_name).(pluronic) = rmfield(mainSAXS.(protein_name).(pluronic),c_string);
+                disp(['No SAXS data', protein_name, pluronic, c_string])
+                mainSAXS.(protein_name).(pluronic)
                 continue
             else
             end
@@ -655,8 +696,7 @@ for proteins = fieldnames(mainT)'
             data = mainT.(protein_name).(pluronic).(c_string);
             rm = zeros(1,length(data.T));
             ro = zeros(1,length(data.T));
-            rt = zeros(1,length(data.T));
-            
+            extrapolated = ["","","",""];
             for i = 1:length(data.T)
                 
                 temperature_find = ismember(SAXS_data.T,data.T(i));
@@ -668,11 +708,19 @@ for proteins = fieldnames(mainT)'
                     % do nothing - there is no SAXS data for this example
                 else
                     rm(1,i) = test.rm;
-                    ro(1,i) = test.ro;
-                    rt(1,i) = test.rt;
+                    ro(1,i) = test.r_oct;
+                    conc(1,i) = c;
+                    a = test.extrapolated{1};
+                    extrapolated(1,i) = a;
+                    if c == 43
+                        conc(1,i) = 42.5; % cant have decimals in name
+                    elseif c == 38
+                        conc(1,i) = 37.5; % cant have decimals in name
+                    end
                 end
             end
             mainSAXS.(protein_name).(pluronic).(c_string).('T') = data.T;
+            mainSAXS.(protein_name).(pluronic).(c_string).('c') = conc;
             mainSAXS.(protein_name).(pluronic).(c_string).('D') = data.D;
             mainSAXS.(protein_name).(pluronic).(c_string).('Dneg') = data.Dneg;
             mainSAXS.(protein_name).(pluronic).(c_string).('Dpos') = data.Dpos;
@@ -682,7 +730,7 @@ for proteins = fieldnames(mainT)'
             mainSAXS.(protein_name).(pluronic).(c_string).('rh_prot') = data.rh_prot;
             mainSAXS.(protein_name).(pluronic).(c_string).('rm') = rm;
             mainSAXS.(protein_name).(pluronic).(c_string).('ro') = ro;
-            mainSAXS.(protein_name).(pluronic).(c_string).('rt') = rt;
+            mainSAXS.(protein_name).(pluronic).(c_string).('extrapolated') = extrapolated;
             
         end
     end
@@ -885,14 +933,14 @@ for proteins = fieldnames(mainT)'
                 ax.YScale = 'log';
                 ax.YLim = [1e-4 1e0]; 
                 ax.XLabel.String = 'Temperature [\circC]';
-                ax.YLabel.String = 'D/D_0 [\mum^2s^{-1}]';
+                ax.YLabel.String = 'D/D_0';
                 
                 if strcmp(protein_name,'BSA')
                     lgd = legend(lgd_names.(protein_name).(pluronic));
                     lgd.Orientation = 'vertical';
                     lgd.NumColumns = 2;
                     lgd.Location = 'best';
-                    lgd.Title.String = [protein_name,' in',pluronic];
+                    lgd.Title.String = [protein_name,' in ',pluronic];
                     lgd.LineWidth = 0.5; 
                 else
                     lgd = legend(lgd_names.(protein_name).(pluronic));
@@ -946,7 +994,7 @@ for proteins = fieldnames(mainT)'
                 c = concentrations{1};
                 data = mainT.(protein_name).(pluronic).(c);
 
-                p1 = errorbar(data.T,1-data.fm0,data.fmlb,data.fmub);
+                p1 = errorbar(data.T,data.fm0,data.fmlb,data.fmub);
                 hold on
                 p1.Marker = 'o';
                 p1.Color = colors6(c_count,:);
@@ -959,22 +1007,24 @@ for proteins = fieldnames(mainT)'
                 ax.YScale = 'linear';
                 ax.YLim = [1e-2 1e0]; 
                 ax.XLabel.String = 'Temperature [\circC]';
-                ax.YLabel.String = 'Immobile protein fraction';
+                ax.YLabel.String = 'Mobile protein fraction';
                 
                 if strcmp(protein_name,'BSA')
                     lgd = legend(lgd_names.(protein_name).(pluronic));
                     lgd.Orientation = 'vertical';
                     lgd.NumColumns = 1;
                     lgd.Location = 'northwest';
-                    lgd.Title.String = [protein_name,' at T ='];
+                    lgd.Title.String = [protein_name,' in ',pluronic];
                     lgd.LineWidth = 0.5; 
+                    lgd.Location = 'southwest';
                 else
                     lgd = legend(lgd_names.(protein_name).(pluronic));
                     lgd.Orientation = 'vertical';
                     lgd.NumColumns = 1;
                     lgd.Location = 'best';
-                    lgd.Title.String = [protein_name,' at T ='];
+                    lgd.Title.String = [protein_name,' in ',pluronic];
                     lgd.LineWidth = 0.5; 
+                    lgd.Location = 'southwest';
                 end
     end
     if strcmp(protein_name,'BSA')
@@ -1151,25 +1201,38 @@ for proteins = fieldnames(mainT)'
     i = 0;
     for pluronics = fieldnames(mainT.(protein_name))' 
         i = i+1; % number of pluronics
+        if i ==3
+            break
+        else
+        end
         pluronic = pluronics{1};
         
-        subplot(1,3,i);
+        subplot(1,2,i);
             c_count = 0;
 
-        for k = 1:length(fieldnames(mainSAXS.(protein_name).(pluronic))')
+        if protein_name == 'BSA'
+            ind = 3;
+        else
+            ind = 0;
+        end
+        for k = 1:(length(fieldnames(mainSAXS.(protein_name).(pluronic))')-ind)
             n_conc = length(fieldnames(mainSAXS.(protein_name).(pluronic))');
             concentrations = fieldnames(mainSAXS.(protein_name).(pluronic))';
             c_count = c_count+1;
+            
+            
             c = concentrations{1+n_conc-k};
+            disp([protein_name,' ',pluronic,' ',c])
             data = mainT.(protein_name).(pluronic).(c);
             SAXSdata = mainSAXS.(protein_name).(pluronic).(c);
+
             xdata = data.rh_prot./SAXSdata.rm;
             
             p1 = errorbar(xdata,data.D,data.Dneg,data.Dpos);
             hold on
             p1.Marker = 'o';
-            p1.Color = colors6(c_count,:);
-            p1.MarkerFaceColor = colors6(c_count,:);
+            p1.Color = colors3(c_count,:);
+            p1.MarkerFaceColor = colors3(c_count,:);
             p1.LineStyle = 'none';
         end
             
@@ -1208,6 +1271,8 @@ if save_im == 'y'
     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
 else
 end
+
+
 %% Plotting fm0 vs rh/rm from DLS (figure == protein),(subplots == pluronic)
 % normal plots
 proteinCount = 0;
@@ -1247,7 +1312,7 @@ for proteins = fieldnames(mainT)'
         end
             
         ax = gca;
-        ax.XLim = [0 1]; 
+        ax.XLim = [0 1.5]; 
         ax.YScale = 'linear';
         ax.YLim = [0 1]; 
         ax.XLabel.String = 'R_h Protein / R_{micelle}';
@@ -1320,11 +1385,11 @@ for proteins = fieldnames(mainT)'
         end
             
         ax = gca;
-        ax.XLim = [0 8]; 
+        ax.XLim = [0 2]; 
         ax.YScale = 'log';
         ax.YLim = [1e-4 1e0]; 
-        ax.XLabel.String = 'R_h Protein / R_{Octahedral}';
-        ax.YLabel.String = 'D/D_0 [\mum^2s^{-1}]';
+        ax.XLabel.String = 'R_h Protein / R_{octahedral}';
+        ax.YLabel.String = 'D/D_0';
         
         if strcmp(protein_name,'BSA')
             lgd = legend(flip([lgd_names_saxs.(protein_name).(pluronic)],1));
@@ -1354,14 +1419,18 @@ if save_im == 'y'
     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
 else
 end
-
-%% Plotting D vs rh/rt from DLS (figure == protein),(subplots == pluronic)
+%% Plotting D vs rh/rm from DLS (figure == ALLDATA EVERYTHING ONE PLOT (Except p123)
 % normal plots
 proteinCount = 0;
 numFigures = 0;
 close all    
 fig = figure(1);
 set(fig,'Position',[2600 300 1500 500]);
+
+all_colors = parula(69);
+colors3(1,:) = all_colors(10,:);
+colors3(2,:) = all_colors(30,:);
+colors3(3,:) = all_colors(50,:);
 
 for proteins = fieldnames(mainT)'
     proteinCount = proteinCount+1;
@@ -1371,41 +1440,65 @@ for proteins = fieldnames(mainT)'
     i = 0;
     for pluronics = fieldnames(mainT.(protein_name))' 
         i = i+1; % number of pluronics
+        if i ==3
+            break
+        else
+        end
         pluronic = pluronics{1};
         
-        subplot(1,3,i);
+%         subplot(1,2,i);
             c_count = 0;
 
-        for k = 1:length(fieldnames(mainSAXS.(protein_name).(pluronic))')
+        if protein_name == 'BSA'
+            ind = 3;
+        else
+            ind = 0;
+        end
+        for k = 1:(length(fieldnames(mainSAXS.(protein_name).(pluronic))')-ind)
             n_conc = length(fieldnames(mainSAXS.(protein_name).(pluronic))');
             concentrations = fieldnames(mainSAXS.(protein_name).(pluronic))';
             c_count = c_count+1;
+            
+            
             c = concentrations{1+n_conc-k};
+            disp([protein_name,' ',pluronic,' ',c])
             data = mainT.(protein_name).(pluronic).(c);
             SAXSdata = mainSAXS.(protein_name).(pluronic).(c);
-            xdata = data.rh_prot./SAXSdata.rt;
+
+            xdata = data.rh_prot./SAXSdata.rm;
             
             p1 = errorbar(xdata,data.D,data.Dneg,data.Dpos);
             hold on
-            p1.Marker = 'o';
-            p1.Color = colors6(c_count,:);
-            p1.MarkerFaceColor = colors6(c_count,:);
+            if strcmp(pluronic,'F87')
+                p1.Marker = 'o';
+            else
+                p1.Marker = 's';
+            end
+                
+                
+            p1.Color = colors3(c_count,:);
+            if SAXSdata.extrapolated(1) == "y"
+                p1.MarkerFaceColor = 'none';
+            else
+                p1.MarkerFaceColor = colors3(c_count,:);
+            end
             p1.LineStyle = 'none';
         end
             
         ax = gca;
-        ax.XLim = [0 8]; 
+        ax.XLim = [0 1]; 
         ax.YScale = 'log';
-        ax.YLim = [1e-4 1e0]; 
-        ax.XLabel.String = 'R_h Protein / R_{Octahedral}';
+        ax.YLim = [1e-4 1]; 
+        ax.XLabel.String = 'R_h Protein / R_{micelle}';
         ax.YLabel.String = 'D/D_0 [\mum^2s^{-1}]';
+        ax.Title.String = 'F127 and F87';
         
-        if strcmp(protein_name,'BSA')
-            lgd = legend(flip([lgd_names_saxs.(protein_name).(pluronic)],1));
+        if strcmp(protein_name,'HSA')
+            lgd = legend(flip([lgd_names.all],1));
             lgd.Orientation = 'vertical';
             lgd.NumColumns = 2;
             lgd.Location = 'best';
-            lgd.Title.String = [pluronic];
+            lgd.Title.String = ['wt% , pluronic'];
             lgd.LineWidth = 0.5; 
             lgd.AutoUpdate = 'off';
         else
@@ -1423,8 +1516,186 @@ for proteins = fieldnames(mainT)'
 end
 if save_im == 'y'
     fig.PaperUnits = 'inches';
-    plot_name = [' All Pluronics All Prot D vs Rh_div_Rt'];
+    plot_name = [' EVERYTHING D vs Rh_div_Rm'];
     plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
 else
+end
+%% Plotting D vs rh/ro from DLS (figure == ALLDATA EVERYTHING ONE PLOT (Except p123)
+% normal plots
+proteinCount = 0;
+numFigures = 0;
+close all    
+fig = figure(1);
+set(fig,'Position',[2600 300 1500 500]);
+
+all_colors = parula(69);
+colors3(1,:) = all_colors(10,:);
+colors3(2,:) = all_colors(30,:);
+colors3(3,:) = all_colors(50,:);
+
+for proteins = fieldnames(mainT)'
+    proteinCount = proteinCount+1;
+    protein_name = proteins{1};
+    
+
+    i = 0;
+    for pluronics = fieldnames(mainT.(protein_name))' 
+        i = i+1; % number of pluronics
+        if i ==3
+            break
+        else
+        end
+        pluronic = pluronics{1};
+        
+%         subplot(1,2,i);
+            c_count = 0;
+
+        if protein_name == 'BSA'
+            ind = 3;
+        else
+            ind = 0;
+        end
+        for k = 1:(length(fieldnames(mainSAXS.(protein_name).(pluronic))')-ind)
+            n_conc = length(fieldnames(mainSAXS.(protein_name).(pluronic))');
+            concentrations = fieldnames(mainSAXS.(protein_name).(pluronic))';
+            c_count = c_count+1;
+            
+            
+            c = concentrations{1+n_conc-k};
+            disp([protein_name,' ',pluronic,' ',c])
+            data = mainT.(protein_name).(pluronic).(c);
+            SAXSdata = mainSAXS.(protein_name).(pluronic).(c);
+
+            xdata = data.rh_prot./SAXSdata.ro;
+            
+            p1 = errorbar(xdata,data.D,data.Dneg,data.Dpos);
+            hold on
+            if strcmp(pluronic,'F87')
+                p1.Marker = 'o';
+            else
+                p1.Marker = 's';
+            end
+                
+                
+            p1.Color = colors3(c_count,:);
+            if SAXSdata.extrapolated(1) == "y"
+                p1.MarkerFaceColor = 'none';
+            else
+                p1.MarkerFaceColor = colors3(c_count,:);
+            end
+            p1.LineStyle = 'none';
+        end
+            
+        ax = gca;
+        ax.XLim = [0 1.5]; 
+        ax.YScale = 'log';
+        ax.YLim = [1e-4 1]; 
+        ax.XLabel.String = 'R_h Protein / R_{octahedral}';
+        ax.YLabel.String = 'D/D_0';
+        ax.Title.String = 'F127 and F87';
+        
+        if strcmp(protein_name,'HSA')
+            lgd = legend(flip([lgd_names.all],1));
+            lgd.Orientation = 'vertical';
+            lgd.NumColumns = 2;
+            lgd.Location = 'best';
+            lgd.Title.String = ['wt% , pluronic'];
+            lgd.LineWidth = 0.5; 
+            lgd.AutoUpdate = 'off';
+        else
+        end
+
+
+    end
+    if strcmp(protein_name,'BSA')
+        fig.PaperPosition = [0 0 16 5]; 
+        
+    else
+        fig.PaperPosition = [0 0 16 5];  
+    end
+
+end
+if save_im == 'y'
+    fig.PaperUnits = 'inches';
+    plot_name = [' EVERYTHING D vs Rh_div_Ro'];
+    plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+    print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+else
+end
+
+%% Plotting ln(D/T) vs 1/T  (figure == protein),(subplots == pluronic)
+% normal plots
+proteinCount = 0;
+numFigures = 0;
+close all
+for proteins = fieldnames(mainT)'
+    proteinCount = proteinCount+1;
+    protein_name = proteins{1};
+    
+    fig = figure(proteinCount);
+    set(fig,'Position',[2600 300 1500 500]);
+    i = 0;
+    for pluronics = fieldnames(mainT.(protein_name))' 
+        i = i+1; % number of pluronics
+        pluronic = pluronics{1};
+        
+        subplot(1,length(fieldnames(mainT.(protein_name))),i);
+        length(fieldnames(mainT.(protein_name)));
+        if strcmp(protein_name, 'BSA')
+            c_count = 0;
+        else
+            c_count = 3;
+        end
+            for concentrations = fieldnames(mainT.(protein_name).(pluronic))'
+                c_count = c_count+1;
+                c = concentrations{1};
+                data = mainT.(protein_name).(pluronic).(c);
+                ydata = log(data.D_raw);
+                xdata = 1./(data.T+273);
+
+                p1 = plot(xdata,ydata);
+                hold on
+                p1.Marker = 'o';
+                p1.Color = colors6(c_count,:);
+                p1.MarkerFaceColor = colors6(c_count,:);
+                p1.LineStyle = 'none';
+            end
+            
+                ax = gca;
+%                 ax.XLim = [20 60]; 
+%                 ax.YScale = 'log';
+%                 ax.YLim = [1e-4 1e0]; 
+                ax.XLabel.String = 'Temperature [\circC]';
+                ax.YLabel.String = 'ln(D)';
+                
+                if strcmp(protein_name,'BSA')
+                    lgd = legend(lgd_names.(protein_name).(pluronic));
+                    lgd.Orientation = 'vertical';
+                    lgd.NumColumns = 2;
+                    lgd.Location = 'best';
+                    lgd.Title.String = [protein_name,' in ',pluronic];
+                    lgd.LineWidth = 0.5; 
+                else
+                    lgd = legend(lgd_names.(protein_name).(pluronic));
+                    lgd.Orientation = 'vertical';
+                    lgd.NumColumns = 1;
+                    lgd.Location = 'best';
+                    lgd.Title.String = [protein_name,' in ',pluronic];
+                    lgd.LineWidth = 0.5; 
+                end
+    end
+    if strcmp(protein_name,'BSA')
+        fig.PaperPosition = [0 0 16 5]; 
+        
+    else
+        fig.PaperPosition = [0 0 12 5];  
+    end
+    if save_im == 'y'
+        fig.PaperUnits = 'inches';
+        plot_name = [protein_name,' All Pluronics lnD v lnT'];
+        plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+        print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+    else
+    end
 end

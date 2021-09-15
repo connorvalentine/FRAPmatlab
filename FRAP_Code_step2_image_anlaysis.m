@@ -65,8 +65,8 @@
 %               frap folder must be named 'frap'
 
 global folder1 folder2
-    folder1 = 'F127_BSA_55C';
-    folder2 = 'trial_7';
+    folder1 = 'F127_HDF_25C';
+    folder2 = 'trial_2';
 
 % Part 2: Would you like to save the plots generated? 
 % Note:         Select 'y' or 'n'
@@ -121,9 +121,9 @@ tic
 
 [fits] = fun_intensity_fits_nofm(fits,alldata);
 
-%%
+
 disp(["all data fit in " + string(round(toc)) + " s."])
-%
+%%
 % adding variables to id that can be useful for plotting 
 % need for loop to unpack
 i = 0;
@@ -136,7 +136,7 @@ for field = fieldnames(id)'
         pd.('rlb')(i) = (fits.(position).radius - fits.(position).err_radius(1)).*fits.(position).pixel_size;
         pd.('rub')(i) = (fits.(position).err_radius(2) - fits.(position).radius).*fits.(position).pixel_size;
         pd.('c')(i) = id.(position).plwt;
-        pd.('D')(i) = fits.(position).D/55.1; % from cheng to normalize by free soln BSA D
+        pd.('D')(i) = fits.(position).D; % from cheng to normalize by free soln BSA D
         pd.('Dneg')(i) = fits.(position).errD(1)/55.1;
         pd.('Dpos')(i) = fits.(position).errD(2)/55.1;
         pd.('fm0')(i) = fits.(position).fm0;   
