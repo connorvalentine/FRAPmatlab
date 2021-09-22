@@ -180,7 +180,7 @@ for proteins = fieldnames(DLS)'
         i = 4;
     end
     
-    subplot(2,4,i)
+    subplot(1,4,i)
         p1 = errorbar(temperatures,data.rh,data.rh_err/2,data.rh_err/2);
         hold on
         p1.Marker = 's';
@@ -195,28 +195,7 @@ for proteins = fieldnames(DLS)'
         ax.XLim = [20 60];
         ax.XLabel.String = ['Temperature [ \circC ]'];
         ax.YLabel.String = 'Hydrodynamic Radius [ \mum ]';
-        yticks([2,3,4,5]);
-        lgd = legend(protein_name);
-        lgd.Orientation = 'vertical';
-        lgd.NumColumns = 2;
-        lgd.Location = 'best';
-        lgd.LineWidth = 0.5; 
-        
-    subplot(2,4,i+4)
-        p1 = errorbar(temperatures,data.D,data.D_err,data.D_err);
-        hold on
-        p1.Marker = 's';
-        p1.Color = color;
-        p1.MarkerFaceColor = color;
-        p1.LineStyle = 'none';
 
-        ax = gca;
-        ax.YScale = 'log';
-        ax.YLim = [1e1 5e2];
-        ax.XLim = [20 60];
-        ax.XLabel.String = ['Temperature [ \circC ]'];
-        ax.YLabel.String = 'D [\mum^2s^{-1}]';
-        yticks([10,100]);
         lgd = legend(protein_name);
         lgd.Orientation = 'vertical';
         lgd.NumColumns = 2;
@@ -226,16 +205,13 @@ for proteins = fieldnames(DLS)'
 end
 
 if save_im == 'y'
-    fig.PaperPosition = [0 0 14 8];  
+    fig.PaperPosition = [0 0 12 2.5];  
     fig.PaperUnits = 'inches';
-    plot_name = ['DLS'];
+    plot_name = ['rh DLS'];
     plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
 else
 end
-
-%% Plotting the SAXS results from APS
-
 %% Plotting all D v C (figure == protein),(subplots == pluronic)
 close all
 protein_count = 0;
