@@ -180,7 +180,7 @@ for proteins = fieldnames(DLS)'
         i = 4;
     end
     
-    subplot(1,4,i)
+    subplot(2,4,i)
         p1 = errorbar(temperatures,data.rh,data.rh_err/2,data.rh_err/2);
         hold on
         p1.Marker = 's';
@@ -195,7 +195,28 @@ for proteins = fieldnames(DLS)'
         ax.XLim = [20 60];
         ax.XLabel.String = ['Temperature [ \circC ]'];
         ax.YLabel.String = 'Hydrodynamic Radius [ \mum ]';
+        yticks([2,3,4,5]);
+        lgd = legend(protein_name);
+        lgd.Orientation = 'vertical';
+        lgd.NumColumns = 2;
+        lgd.Location = 'best';
+        lgd.LineWidth = 0.5; 
+        
+    subplot(2,4,i+4)
+        p1 = errorbar(temperatures,data.D,data.D_err,data.D_err);
+        hold on
+        p1.Marker = 's';
+        p1.Color = color;
+        p1.MarkerFaceColor = color;
+        p1.LineStyle = 'none';
 
+        ax = gca;
+        ax.YScale = 'log';
+        ax.YLim = [1e1 5e2];
+        ax.XLim = [20 60];
+        ax.XLabel.String = ['Temperature [ \circC ]'];
+        ax.YLabel.String = 'D [\mum^2s^{-1}]';
+        yticks([10,100]);
         lgd = legend(protein_name);
         lgd.Orientation = 'vertical';
         lgd.NumColumns = 2;
@@ -205,13 +226,82 @@ for proteins = fieldnames(DLS)'
 end
 
 if save_im == 'y'
-    fig.PaperPosition = [0 0 12 2.5];  
+    fig.PaperPosition = [0 0 14 8];  
     fig.PaperUnits = 'inches';
-    plot_name = ['rh DLS'];
+    plot_name = ['DLS'];
     plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
     print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
 else
 end
+
+
+
+%% Plotting the SAXS results from APS
+pluronics = {'F87';'F127'};
+count = 0;
+for p = 1:2
+    pluronic = pluronics{p};
+    count = count+1;
+    for concs = fieldnames(mainSAXS.LYS.(pluronic))'
+       
+        conc = concs{1};
+        data = mainSAXS.LYS.(pluronic).(conc);
+        
+        subplot(2,2,count)
+            for k = 1:4
+                p1 = plot(data.c(k),data.a(k));
+                hold on
+                p1.Marker = 's';
+                p1.Color = colors4(k,:);
+                p1.MarkerFaceColor = colors4(k,:);
+                p1.LineStyle = 'none';
+                
+                markers(k) = p1;
+            end
+            
+            ax = gca;
+            ax.YScale = 'linear';
+            ax.YLim = [13 17];
+%             ax.XLim = [20 60];
+            ax.XLabel.String = ['Concentration [ wt% ]'];
+            ax.YLabel.String = 'Unit Cell Size [ nm ]';
+            lgd = legend(markers, {'25 \circC','35 \circC','45 \circC','55 \circC'});
+            lgd.Orientation = 'vertical';
+            lgd.NumColumns = 2;
+            lgd.Location = 'north';
+            lgd.LineWidth = 0.5; 
+
+        subplot(2,2,count+2)
+             for k = 1:4
+                p1 = plot(data.c(k),data.rm(k));
+                hold on
+                p1.Marker = 's';
+                p1.Color = colors4(k,:);
+                p1.MarkerFaceColor = colors4(k,:);
+                p1.LineStyle = 'none';
+                markers(k) = p1;
+            end
+            hold on
+            p1.Marker = 's';
+            p1.Color = color;
+            p1.MarkerFaceColor = color;
+            p1.LineStyle = 'none';
+            
+            ax = gca;
+            ax.YScale = 'linear';
+            if strcmp(pluronic,'F87
+            ax.YLim = [5 12];
+%             ax.XLim = [20 60];
+            ax.XLabel.String = ['Concentration [ wt% ]'];
+            ax.YLabel.String = 'Micelle radius [ nm ]';
+            lgd = legend(markers,{'25 \circC','35 \circC','45 \circC','55 \circC'});
+            lgd.Orientation = 'vertical';
+            lgd.NumColumns = 2;
+            lgd.Location = 'north';
+            lgd.LineWidth = 0.5; 
+    end
+end
+
 %% Plotting all D v C (figure == protein),(subplots == pluronic)
 close all
 protein_count = 0;

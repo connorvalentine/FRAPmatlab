@@ -61,7 +61,7 @@ colors3(3,:) = all_colors(1,:);
 colors3(4,:) = all_colors(40,:);
 colors3(5,:) = all_colors(20,:);
 colors3(6,:) = all_colors(1,:);
-save_im = 'n';
+save_im = 'y';
 
 [main, mainT, mainSAXS, DLS] = data_loader();
 %% adding a structure for legend names bcuz cant start strucutre names with a number
@@ -235,7 +235,92 @@ else
 end
 
 %% Plotting the SAXS results from APS
+pluronics = {'F87';'F127'};
+count = 0;
+for p = 1:2
+    pluronic = pluronics{p};
+    count = count+1;
+    for concs = fieldnames(mainSAXS.LYS.(pluronic))'
+       
+        conc = concs{1};
+        data = mainSAXS.LYS.(pluronic).(conc);
+        
+        subplot(2,2,count)
+            for k = 1:4
+                p1 = plot(data.c(k),data.a(k));
+                hold on
+                p1.Marker = 's';
+                p1.Color = colors4(k,:);
+                p1.MarkerFaceColor = colors4(k,:);
+                p1.LineStyle = 'none';
+                
+                markers(k) = p1;
+            end
+            
+            ax = gca;
+            ax.YScale = 'linear';
+            if strcmp(pluronic,'F87')
+                ax.XLim = [36 44];
+                ax.YLim = [14 18];
+            else
+                ax.XLim = [24 31];
+                ax.YLim = [20 24];
+            end
+            ax.XLabel.String = ['Concentration [ wt% ]'];
+            ax.YLabel.String = 'Unit Cell Size [ nm ]';
+            lgd = legend(markers, {'25 \circC','35 \circC','45 \circC','55 \circC'});
+            lgd.Title.String = [pluronic];
+            lgd.Orientation = 'vertical';
+            lgd.NumColumns = 2;
+            lgd.Location = 'north';
+            lgd.LineWidth = 0.5; 
 
+        subplot(2,2,count+2)
+             for k = 1:4
+                p1 = plot(data.c(k),data.rm(k));
+                hold on
+                p1.Marker = 's';
+                p1.Color = colors4(k,:);
+                p1.MarkerFaceColor = colors4(k,:);
+                p1.LineStyle = 'none';
+                markers(k) = p1;
+            end
+            hold on
+            p1.Marker = 's';
+            p1.Color = color;
+            p1.MarkerFaceColor = color;
+            p1.LineStyle = 'none';
+            
+            ax = gca;
+            ax.YScale = 'linear';
+            if strcmp(pluronic,'F87')
+                ax.XLim = [36 44];
+                ax.YLim = [6 8];
+            else
+                ax.XLim = [24 31];
+                ax.YLim = [8 10];
+            end
+            
+%             ax.XLim = [20 60];
+            ax.XLabel.String = ['Concentration [ wt% ]'];
+            ax.YLabel.String = 'Micelle radius [ nm ]';
+            lgd = legend(markers,{'25 \circC','35 \circC','45 \circC','55 \circC'});
+            lgd.Title.String = [pluronic];
+            lgd.Orientation = 'vertical';
+            lgd.NumColumns = 2;
+            lgd.Location = 'north';
+            lgd.LineWidth = 0.5; 
+    end
+end
+
+if save_im == 'y'
+    fig.PaperPosition = [0 0 12 10];  
+    fig.PaperUnits = 'inches';
+    plot_name = ['SAXS'];
+    plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
+    print(fig,plot_path, '-painters', '-dpng', '-r600')    % saving the figure as a high quality png    
+else
+end
 %% Plotting all D v C (figure == protein),(subplots == pluronic)
 close all
 protein_count = 0;
@@ -1655,9 +1740,6 @@ for proteins = fieldnames(main)'
         end
         d = 2*main.(protein_name).(temperature_name).(pluronic).rh_prot(1);
         
-%         for concs = fieldnames(mainSAXS.BSA.F87)
-            
-
         % fit the data 
         ft = fittype('interstitial_hopping_SAXS_DLS(x,B,G)');
              options = fitoptions(ft);

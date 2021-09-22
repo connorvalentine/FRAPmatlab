@@ -598,6 +598,14 @@ for proteins = fieldnames(mainT)'
                     elseif c == 38
                         conc(1,i) = 37.5; % cant have decimals in name
                     end
+                    
+                    if c == 18
+                        conc(1,i) = 17.5; % cant have decimals in name
+                    elseif c == 23
+                        conc(1,i) = 22.5; % cant have decimals in name
+                    elseif c == 28
+                        conc(1,i) = 27.5; % cant have decimals in name
+                    end
                 end
             end
             mainSAXS.(protein_name).(pluronic).(c_string).('T') = data.T;
