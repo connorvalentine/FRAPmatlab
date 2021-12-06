@@ -22,7 +22,7 @@ function [main, mainT, mainSAXS,DLS] = data_loader()
 % Normalizing the data for use down below
 %normalizing the data by the bsa in solution D0 data. Using Light
 %scattering data for D0 in solution not the FRAP
-dls_path = 'C:\Users\user\Desktop\mathub\APS 2021';
+dls_path = 'C:\Users\user\Box\Sorted Data FRAP\APS data';
 filename = 'Protein DLS.xlsx';
 dls_data = readtable(fullfile(dls_path,filename),'Range','A1:F17');
 
@@ -542,7 +542,7 @@ end
 % This makes a better data structure for plotting things vs Temperature
 mainSAXS = mainT;
 
-SAXS_path = 'C:\Users\user\Box\Presentations\0_Papers\BSA Diffusion\Geometry of FCC and BCC and calculations\SAXS 2021 data and DLS';
+SAXS_path = 'C:\Users\user\Box\Sorted Data FRAP\APS data';
 filename = 'SAXS_data_clean.xlsx';
 SAXS_data = readtable(fullfile(SAXS_path,filename),'Range','A1:L53');
 

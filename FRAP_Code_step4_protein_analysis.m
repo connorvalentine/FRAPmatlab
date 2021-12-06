@@ -14,9 +14,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Change default axes fonts.
     set(0,'DefaultAxesFontName', 'Arial')
-    set(0,'DefaultAxesFontSize',14)
+    set(0,'DefaultAxesFontSize',16)
 % Change default text fonts.
-    set(0,'DefaultTextFontname', 'Arial','DefaultTextFontSize',14)
+    set(0,'DefaultTextFontname', 'Arial','DefaultTextFontSize',16)
 % default axis settings for better plots
     set(groot,'defaultaxeslinewidth',1)
     set(groot,'DefaultLineLineWidth',1)
@@ -61,9 +61,14 @@ colors3(3,:) = all_colors(1,:);
 colors3(4,:) = all_colors(40,:);
 colors3(5,:) = all_colors(20,:);
 colors3(6,:) = all_colors(1,:);
+
+
+
 save_im = 'y';
 
 [main, mainT, mainSAXS, DLS] = data_loader();
+%% plot defaults 
+MarkerSize = 12;
 %% adding a structure for legend names bcuz cant start strucutre names with a number
 lgd_names = struct();
 pluronics = struct();
@@ -186,6 +191,7 @@ for proteins = fieldnames(DLS)'
         p1.Marker = 's';
         p1.Color = color;
         p1.MarkerFaceColor = color;
+        p1.MarkerSize = MarkerSize;
         p1.LineStyle = 'none';
 
         ax = gca;
@@ -194,7 +200,7 @@ for proteins = fieldnames(DLS)'
         ax.YLim = [1.5 5.5];
         ax.XLim = [20 60];
         ax.XLabel.String = ['Temperature [ \circC ]'];
-        ax.YLabel.String = 'Hydrodynamic Radius [ \mum ]';
+        ax.YLabel.String = 'R_{Hydrodynamic} [ \mum ]';
         yticks([2,3,4,5]);
         lgd = legend(protein_name);
         lgd.Orientation = 'vertical';
@@ -209,6 +215,7 @@ for proteins = fieldnames(DLS)'
         p1.Color = color;
         p1.MarkerFaceColor = color;
         p1.LineStyle = 'none';
+        p1.MarkerSize = MarkerSize;
 
         ax = gca;
         ax.YScale = 'log';
@@ -237,6 +244,7 @@ end
 %% Plotting the SAXS results from APS
 pluronics = {'F87';'F127'};
 count = 0;
+Temperatures = [25;35;45;55];
 for p = 1:2
     pluronic = pluronics{p};
     count = count+1;
@@ -247,11 +255,15 @@ for p = 1:2
         
         subplot(2,2,count)
             for k = 1:4
+%                 a_calc = unit_cell_extrapolation(pluronic,Temperatures(k),data.c(k));
                 p1 = plot(data.c(k),data.a(k));
                 hold on
+%                 p2 = plot(data.c(k),a_calc );
+%                 p2.Marker = 'd';
                 p1.Marker = 's';
                 p1.Color = colors4(k,:);
                 p1.MarkerFaceColor = colors4(k,:);
+                p1.MarkerSize = MarkerSize;
                 p1.LineStyle = 'none';
                 
                 markers(k) = p1;
@@ -282,6 +294,7 @@ for p = 1:2
                 p1.Marker = 's';
                 p1.Color = colors4(k,:);
                 p1.MarkerFaceColor = colors4(k,:);
+                p1.MarkerSize = MarkerSize;
                 p1.LineStyle = 'none';
                 markers(k) = p1;
             end
@@ -289,6 +302,7 @@ for p = 1:2
             p1.Marker = 's';
             p1.Color = color;
             p1.MarkerFaceColor = color;
+            p1.MarkerSize = MarkerSize;
             p1.LineStyle = 'none';
             
             ax = gca;
@@ -361,7 +375,9 @@ for proteins = fieldnames(main)'
                 p1.Marker = 'd';
                 p1.Color = color;
                 p1.MarkerFaceColor = color;
+                p1.MarkerSize = MarkerSize;
                 p1.LineStyle = 'none';
+                p1.LineWidth = 2;
 
                 ax = gca;
                 ax.YScale = 'log';
@@ -432,7 +448,9 @@ for proteins = fieldnames(main)'
                 p1.Marker = 'o';
                 p1.Color = color;
                 p1.MarkerFaceColor = color;
+                p1.MarkerSize = MarkerSize;
                 p1.LineStyle = 'none';
+                p1.LineWidth = 2;
 
                 ax = gca;
                 ax.YScale = 'linear';
@@ -513,6 +531,8 @@ for proteins = fieldnames(mainT)'
                 p1.Color = colors3(c_count,:);
                 p1.MarkerFaceColor = colors3(c_count,:);
                 p1.LineStyle = 'none';
+                p1.MarkerSize = MarkerSize;
+                p1.LineWidth = 2;
             end
             
                 ax = gca;
@@ -587,6 +607,8 @@ for proteins = fieldnames(mainT)'
                 p1.Color = colors3(c_count,:);
                 p1.MarkerFaceColor = colors3(c_count,:);
                 p1.LineStyle = 'none';
+                p1.MarkerSize = MarkerSize;
+                p1.LineWidth = 2;
             end
 
                 
@@ -667,6 +689,8 @@ for proteins = fieldnames(mainT)'
             p1.Color = colors3(c_count,:);
             p1.MarkerFaceColor = colors3(c_count,:);
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -740,6 +764,8 @@ for proteins = fieldnames(mainT)'
                 p1.Color = colors3(c_count,:);
                 p1.MarkerFaceColor = colors3(c_count,:);
                 p1.LineStyle = 'none';
+                p1.MarkerSize = MarkerSize-2;
+                p1.LineWidth = 2;
                 ax = gca;
                 ax.XLim = [1 6]; 
                 ax.YScale = 'log';
@@ -820,6 +846,8 @@ for proteins = fieldnames(mainT)'
             p1.Color = colors3(c_count,:);
             p1.MarkerFaceColor = colors3(c_count,:);
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -894,6 +922,9 @@ for proteins = fieldnames(mainT)'
                 p1.Color = colors3(c_count,:);
                 p1.MarkerFaceColor = colors3(c_count,:);
                 p1.LineStyle = 'none';
+                p1.MarkerSize = MarkerSize-2;
+                p1.LineWidth = 2;
+                
                 ax = gca;
                 ax.XLim = [1 6]; 
                 ax.YScale = 'linear';
@@ -964,6 +995,8 @@ for proteins = fieldnames(mainT)'
             p1.Color = colors3(c_count,:);
             p1.MarkerFaceColor = colors3(c_count,:);
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -1032,6 +1065,8 @@ for proteins = fieldnames(mainT)'
             p1.Color = colors3(c_count,:);
             p1.MarkerFaceColor = colors3(c_count,:);
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -1102,6 +1137,8 @@ for proteins = fieldnames(mainT)'
             p1.Color = colors3(c_count,:);
             p1.MarkerFaceColor = colors3(c_count,:);
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -1170,6 +1207,8 @@ for proteins = fieldnames(mainT)'
             p1.Color = colors3(c_count,:);
             p1.MarkerFaceColor = colors3(c_count,:);
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -1245,6 +1284,8 @@ for proteins = fieldnames(mainT)'
                 p1.MarkerFaceColor = colors3(c_count,:);
             end
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -1255,7 +1296,7 @@ for proteins = fieldnames(mainT)'
         ax.YLabel.String = 'D/D_0';
         
         if strcmp(protein_name,'HSA')
-            lgd = legend(flip([lgd_names.all],1));
+            lgd = legend(lgd_names.all);
             lgd.Orientation = 'vertical';
             lgd.NumColumns = 2;
             lgd.Location = 'best';
@@ -1313,16 +1354,21 @@ for proteins = fieldnames(mainT)'
             hold on
             if strcmp(pluronic,'F87')
                 p1.Marker = 's';
+                p1.MarkerFaceColor = colors3(c_count,:);
             else
                 p1.Marker = '^';
+                p1.MarkerFaceColor = 'none';
             end   
             p1.Color = colors3(c_count,:);
-            if SAXSdata.extrapolated(1) == "y"
-                p1.MarkerFaceColor = 'none';
-            else
-                p1.MarkerFaceColor = colors3(c_count,:);
-            end
+%             if SAXSdata.extrapolated(1) == "y"
+%                 p1.MarkerFaceColor = 'none';
+%             else
+%                 p1.MarkerFaceColor = colors3(c_count,:);
+%             end
+
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize;
+            p1.LineWidth = 2;
         end
             
         ax = gca;
@@ -1333,10 +1379,10 @@ for proteins = fieldnames(mainT)'
         ax.YLabel.String = 'D/D_0';
         
         if strcmp(protein_name,'HSA')
-            lgd = legend(flip([lgd_names.all],1));
+            lgd = legend(lgd_names.all);
             lgd.Orientation = 'vertical';
             lgd.NumColumns = 2;
-            lgd.Location = 'southwest';
+            lgd.Location = 'northeast';
             lgd.Title.String = ['wt% , pluronic'];
             lgd.LineWidth = 0.5; 
             lgd.AutoUpdate = 'off';
@@ -1345,7 +1391,7 @@ for proteins = fieldnames(mainT)'
     end
 end
 if save_im == 'y'
-    fig.PaperPosition = [0 0 12 5];
+    fig.PaperPosition = [0 0 7 6];
     fig.PaperUnits = 'inches';
     plot_name = ['d vs rh_ro COMBO'];
     plot_path = fullfile(plotfolder,[plot_name,'.png']); % can change saved name here
@@ -1506,6 +1552,9 @@ for proteins = fieldnames(main)'
                 p1.Color = color;
                 p1.MarkerFaceColor = color;
                 p1.LineStyle = 'none';
+                p1.MarkerSize = MarkerSize-2;
+                p1.LineWidth = 2;
+                
                 legend_markers(t) = p1;
                 ax = gca;
                 ax.YScale = 'log';
@@ -1583,6 +1632,9 @@ for proteins = fieldnames(main)'
         color = colors4(t,:);
         
         pluronic = 'F87';
+        global pluronic_name T
+        pluronic_name = pluronic; 
+        T = temperature;
         data = main.(protein_name).(temperature_name).(pluronic);
         
         w = 1;
@@ -1594,7 +1646,7 @@ for proteins = fieldnames(main)'
             a(w) = aw;
             w = w +1;
         end
-        a = a(end); % matlab isnt playin with coefficients as vectors
+%         a = a(end); % matlab isnt playin with coefficients as vectors
         
         if strcmp(protein_name,'BSA')
             x = (data.c./100)';
@@ -1617,18 +1669,33 @@ for proteins = fieldnames(main)'
             
 
         % fit the data 
-        ft = fittype('interstitial_hopping_SAXS_DLS(x,B,G)');
-             options = fitoptions(ft);
-              options.StartPoint = [0.1,0.3];
-              options.Lower = [0.01, 0];
-              options.Upper = [1000, 2];
-              options.TolFun = 1e-10;
-             options.Robust = 'LAR';  
-        % perform the fit to the data
-        y_fit = log(y);
-        [f,gof,output] = fit(x,y_fit,ft,options);
-        x_fit = linspace(0.35,0.5,10)'; 
-        D_fit = exp(f(x_fit)); 
+        
+        % fit the data 
+        x0 = [10 1];
+        xlb = [0 0];
+        xub = [1000000 1e2];
+        xdata = x;
+        ydata = log(y);
+        
+        output_coefficients = lsqcurvefit(@interstitial_hopping_SAXS_DLS_lsq,x0,xdata,ydata,xlb,xub);
+        B = output_coefficients(1);
+        G = output_coefficients(2);
+        
+%         ft = fittype('interstitial_hopping_SAXS_DLS(x,B,G)');
+%              options = fitoptions(ft);
+%               options.StartPoint = [0.1,0.3];
+%               options.Lower = [0.01, 0];
+%               options.Upper = [1000, 2];
+%               options.TolFun = 1e-10;
+%              options.Robust = 'LAR';  
+%         % perform the fit to the data
+%         y_fit = log(y);
+%         [f,gof,output] = fit(x,y_fit,ft,options);
+%         x_fit = linspace(0.35,0.5,10)'; 
+%         D_fit = exp(f(x_fit)); 
+%         
+        x_fit = linspace(0.3,0.5,10)'; 
+        D_fit = exp(interstitial_hopping_SAXS_DLS_lsq([B;G],x_fit)); 
 
         subplot(2,2,protein_count);
 
@@ -1636,10 +1703,15 @@ for proteins = fieldnames(main)'
             hold on
             p2 = plot(x_fit,D_fit);
             p2.Color = color;
+            p2.LineWidth = 2;
+            
+            
             p1.Marker = 'd';
             p1.Color = color;
             p1.MarkerFaceColor = color;
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
             legend_markers(t) = p1;
 
             ax = gca;
@@ -1661,9 +1733,8 @@ for proteins = fieldnames(main)'
         end        
         temp =struct('fits',f);
         fits.('fits')(n) = temp;
-%         crystal_model_table.fit(n) = temp;
-        crystal_model_table_F87.B(n) = exp(f.B);
-        crystal_model_table_F87.G(n) = f.G;
+        crystal_model_table_F87.B(n) = exp(B);
+        crystal_model_table_F87.G(n) = G;
         crystal_model_table_F87.T(n) = temperature;
         crystal_model_table_F87.prot(n) = protein_name;
         n = n+1;
@@ -1681,12 +1752,11 @@ end
 %% Plotting all D_raw v C for F127 with SAXS params and DLS params
 crystal_model_table_F127 = table('size',[16,4],'VariableTypes',{'double','double','double','string'},'variableNames',{'B','G','T','prot'});
 
-close all
 protein_count = 0;
 n = 1;
 global d a 
-fig = figure(69);
-set(fig,'Position',[2600 300 1500 500]);
+fig = figure(75);
+set(fig,'Position',[1700 300 1200 500]);
 fits = struct();
 for proteins = fieldnames(main)'
     protein_count = protein_count +1;
@@ -1710,18 +1780,21 @@ for proteins = fieldnames(main)'
         color = colors4(t,:);
         
         pluronic = 'F127';
+        global pluronic_name T
+        pluronic_name = pluronic; 
+        T = temperature;
         data = main.(protein_name).(temperature_name).(pluronic);
         
         w = 1;
         a = zeros(3,1);
-        for concs = fieldnames(mainSAXS.(protein_name).F127)'
+        for concs = fieldnames(mainSAXS.LYS.F127)'
             conc = concs{1};
 
             aw = mainSAXS.(protein_name).F127.(conc).a(t)/1000; % nm to micron convesion
             a(w) = aw;
             w = w +1;
         end
-        a = a(end); % matlab isnt playin with coefficients as vectors
+%         a = a(end); % matlab isnt playin with coefficients as vectors
         
         if strcmp(protein_name,'BSA')
             x = (data.c./100)';
@@ -1741,18 +1814,27 @@ for proteins = fieldnames(main)'
         d = 2*main.(protein_name).(temperature_name).(pluronic).rh_prot(1);
         
         % fit the data 
-        ft = fittype('interstitial_hopping_SAXS_DLS(x,B,G)');
-             options = fitoptions(ft);
-              options.StartPoint = [0.1,0.3];
-              options.Lower = [0.01, 0];
-              options.Upper = [1000, 2];
-              options.TolFun = 1e-10;
-             options.Robust = 'LAR';  
+        x0 = [10 1];
+        xlb = [0 0];
+        xub = [1000 1e2];
+        xdata = x;
+        ydata = log(y);
+        
+        output_coefficients = lsqcurvefit(@interstitial_hopping_SAXS_DLS_lsq,x0,xdata,ydata,xlb,xub);
+        B = output_coefficients(1);
+        G = output_coefficients(2);
+        
+%         ft = fittype('interstitial_hopping_SAXS_DLS(x,B,G)');
+%              options = fitoptions(ft);
+%               options.StartPoint = [0.1,0.3];
+%               options.Lower = [0.01, 0];
+%               options.Upper = [1000, 2];
+%               options.TolFun = 1e-10;
+%              options.Robust = 'LAR';  
         % perform the fit to the data
-        y_fit = log(y);
-        [f,gof,output] = fit(x,y_fit,ft,options);
+
         x_fit = linspace(0.2,0.4,10)'; 
-        D_fit = exp(f(x_fit)); 
+        D_fit = exp(interstitial_hopping_SAXS_DLS_lsq([B;G],x_fit)); 
 
         subplot(2,2,protein_count);
 
@@ -1760,10 +1842,14 @@ for proteins = fieldnames(main)'
             hold on
             p2 = plot(x_fit,D_fit);
             p2.Color = color;
+            p2.LineWidth = 2;
+            
             p1.Marker = 'd';
             p1.Color = color;
             p1.MarkerFaceColor = color;
             p1.LineStyle = 'none';
+            p1.MarkerSize = MarkerSize-2;
+            p1.LineWidth = 2;
             legend_markers(t) = p1;
 
             ax = gca;
@@ -1785,9 +1871,8 @@ for proteins = fieldnames(main)'
         end        
         temp =struct('fits',f);
         fits.('fits')(n) = temp;
-%         crystal_model_table.fit(n) = temp;
-        crystal_model_table_F127.B(n) = exp(f.B);
-        crystal_model_table_F127.G(n) = f.G;
+        crystal_model_table_F127.B(n) = exp(B);
+        crystal_model_table_F127.G(n) = G;
         crystal_model_table_F127.T(n) = temperature;
         crystal_model_table_F127.prot(n) = protein_name;
         n = n+1;
@@ -1805,7 +1890,7 @@ end
 
 %% now plotting the B and G for F87
 fig = figure(70);
-set(fig,'Position',[2600 300 1500 500]);
+set(fig,'Position',[1700 300 1200 500]);
 
 subplot(1,2,1)
     hold on
@@ -1814,33 +1899,45 @@ subplot(1,2,1)
     p1.LineStyle = 'none';
     p1.Color = colors4(4,:);
     p1.MarkerFaceColor = colors4(4,:);
+    p1.MarkerSize = MarkerSize-2;
+    p1.LineWidth = 2;
+    
     p2 = plot(crystal_model_table_F87.T(5:8),crystal_model_table_F87.B(5:8));
     p2.Marker = 's';
     p2.LineStyle = 'none';   
     p2.Color = colors4(3,:);
     p2.MarkerFaceColor = colors4(3,:);
+    p2.MarkerSize = MarkerSize-2;
+    p2.LineWidth = 2;
+    
     p3 = plot(crystal_model_table_F87.T(9:12),crystal_model_table_F87.B(9:12));
     p3.Marker = 'o';
     p3.LineStyle = 'none';  
     p3.Color = colors4(2,:);
     p3.MarkerFaceColor = colors4(2,:);
+    p3.MarkerSize = MarkerSize-2;
+    p3.LineWidth = 2;
+    
     p4 = plot(crystal_model_table_F87.T(13:16),crystal_model_table_F87.B(13:16));
     p4.Marker = '*';
     p4.LineStyle = 'none';  
     p4.Color = colors4(1,:);
     p4.MarkerFaceColor = colors4(1,:);
+    p4.MarkerSize = MarkerSize-2;
+    p4.LineWidth = 2;
     
     ax = gca;
     ax.YScale = 'log';
     ax.XLim = [20 60];
     ax.XLabel.String = 'Temperature';
     ax.YLabel.String = 'Beta';
-%     ax.YLim = [4 13]; 
+    ax.YLim = [1e2 1e7]; 
 
     lgd = legend([p1,p2,p3,p4],'BSA','LYS','CHA','HSA');
-    lgd.Location = 'northwest';
+    lgd.Location = 'southwest';
     lgd.Title.String = ['Protein'];
     lgd.LineWidth = 0.5; 
+    
 
 subplot(1,2,2)
     hold on
@@ -1849,28 +1946,39 @@ subplot(1,2,2)
     p1.LineStyle = 'none';
     p1.Color = colors4(4,:);
     p1.MarkerFaceColor = colors4(4,:);
+    p1.MarkerSize = MarkerSize-2;
+    p1.LineWidth = 2;
+    
     p2 = plot(crystal_model_table_F87.T(5:8),crystal_model_table_F87.G(5:8));
     p2.Marker = 's';
     p2.LineStyle = 'none'; 
     p2.Color = colors4(3,:);
     p2.MarkerFaceColor = colors4(3,:);
+    p2.MarkerSize = MarkerSize-2;
+    p2.LineWidth = 2;
+    
     p3 = plot(crystal_model_table_F87.T(9:12),crystal_model_table_F87.G(9:12));
     p3.Marker = 'o';
     p3.LineStyle = 'none';  
     p3.Color = colors4(2,:);
     p3.MarkerFaceColor = colors4(2,:);
+    p3.MarkerSize = MarkerSize-2;
+    p3.LineWidth = 2;
+    
     p4 = plot(crystal_model_table_F87.T(13:16),crystal_model_table_F87.G(13:16));
     p4.Marker = '*';
     p4.LineStyle = 'none';  
     p4.Color = colors4(1,:);
     p4.MarkerFaceColor = colors4(1,:);
+    p4.MarkerSize = MarkerSize-2;
+    p4.LineWidth = 2;
     
     ax = gca;
     ax.XLim = [20 60];
     ax.YScale = 'Linear';
     ax.XLabel.String = 'Temperature';
     ax.YLabel.String = 'Gamma';
-    ax.YLim = [0 1]; 
+     ax.YLim = [0 30]; 
 
     lgd = legend([p1,p2,p3,p4],'BSA','LYS','CHA','HSA');
     lgd.Location = 'northwest';
@@ -1889,9 +1997,9 @@ fig.PaperPosition = [0 0 12 5];
     end
 
 
-%% now plotting the B and G for F127
+% now plotting the B and G for F127
 fig = figure(71);
-set(fig,'Position',[2600 300 1500 500]);
+set(fig,'Position',[1700 300 1200 500]);
 
 subplot(1,2,1)
     hold on
@@ -1900,21 +2008,32 @@ subplot(1,2,1)
     p1.LineStyle = 'none';
     p1.Color = colors4(4,:);
     p1.MarkerFaceColor = colors4(4,:);
+    p1.MarkerSize = MarkerSize-2;
+    p1.LineWidth = 2;
+    
     p2 = plot(crystal_model_table_F127.T(5:8),crystal_model_table_F127.B(5:8));
     p2.Marker = 's';
     p2.LineStyle = 'none';   
     p2.Color = colors4(3,:);
     p2.MarkerFaceColor = colors4(3,:);
+    p2.MarkerSize = MarkerSize-2;
+    p2.LineWidth = 2;
+    
     p3 = plot(crystal_model_table_F127.T(9:12),crystal_model_table_F127.B(9:12));
     p3.Marker = 'o';
     p3.LineStyle = 'none';  
     p3.Color = colors4(2,:);
     p3.MarkerFaceColor = colors4(2,:);
+    p3.MarkerSize = MarkerSize-2;
+    p3.LineWidth = 2;
+    
     p4 = plot(crystal_model_table_F127.T(13:16),crystal_model_table_F127.B(13:16));
     p4.Marker = '*';
     p4.LineStyle = 'none';  
     p4.Color = colors4(1,:);
     p4.MarkerFaceColor = colors4(1,:);
+    p4.MarkerSize = MarkerSize-2;
+    p4.LineWidth = 2;
     
     ax = gca;
     ax.YScale = 'log';
@@ -1935,28 +2054,39 @@ subplot(1,2,2)
     p1.LineStyle = 'none';
     p1.Color = colors4(4,:);
     p1.MarkerFaceColor = colors4(4,:);
+    p1.MarkerSize = MarkerSize-2;
+    p1.LineWidth = 2;
+    
     p2 = plot(crystal_model_table_F127.T(5:8),crystal_model_table_F127.G(5:8));
     p2.Marker = 's';
     p2.LineStyle = 'none'; 
     p2.Color = colors4(3,:);
     p2.MarkerFaceColor = colors4(3,:);
+    p2.MarkerSize = MarkerSize-2;
+    p2.LineWidth = 2;
+    
     p3 = plot(crystal_model_table_F127.T(9:12),crystal_model_table_F127.G(9:12));
     p3.Marker = 'o';
     p3.LineStyle = 'none';  
     p3.Color = colors4(2,:);
     p3.MarkerFaceColor = colors4(2,:);
+    p3.MarkerSize = MarkerSize-2;
+    p3.LineWidth = 2;
+    
     p4 = plot(crystal_model_table_F127.T(13:16),crystal_model_table_F127.G(13:16));
     p4.Marker = '*';
     p4.LineStyle = 'none';  
     p4.Color = colors4(1,:);
     p4.MarkerFaceColor = colors4(1,:);
+    p4.MarkerSize = MarkerSize-2;
+    p4.LineWidth = 2;
     
     ax = gca;
     ax.XLim = [20 60];
     ax.YScale = 'Linear';
     ax.XLabel.String = 'Temperature';
     ax.YLabel.String = 'Gamma';
-    ax.YLim = [0 1]; 
+    ax.YLim = [0 30]; 
 
     lgd = legend([p1,p2,p3,p4],'BSA','LYS','CHA','HSA');
     lgd.Location = 'northwest';
